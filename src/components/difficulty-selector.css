@@ -1,0 +1,58 @@
+.difficulty-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.difficulty-label {
+    font-size: 0.75rem;
+    color: white;
+}
+
+.difficulty-selector {
+    display: flex;
+    background: rgba(0, 0, 0, 0.5);
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
+    padding: 5px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+}
+
+.difficulty-button {
+    border-radius: 15px;
+    font-family: "Press Start 2P", monospace;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    padding: 0.25rem 0.5rem;
+    color: #d1d5db;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.difficulty-button:hover {
+    background-color: #374151;
+    transform: scale(1.05);
+    box-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
+}
+
+.difficulty-button.selected-easy {
+    background-color: #059669;
+    color: white;
+    border: 2px solid white;
+}
+
+.difficulty-button.selected-normal {
+    background-color: #d97706;
+    color: white;
+    border: 2px solid white;
+}
+
+.difficulty-button.selected-hard {
+    background-color: #dc2626;
+    color: white;
+    border: 2px solid white;
+}

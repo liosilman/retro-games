@@ -1,0 +1,799 @@
+/* Variables globales */
+:root {
+    --foreground-rgb: 255, 255, 255;
+    --background-start-rgb: 0, 0, 0;
+    --background-end-rgb: 0, 0, 0;
+  
+    /* Paleta de colores neón retro */
+    --neon-pink: #ff00ff;
+    --neon-blue: #00ffff;
+    --neon-green: #39ff14;
+    --neon-yellow: #ffff00;
+    --neon-orange: #ff9900;
+    --neon-purple: #9900ff;
+  
+    /* Colores para los marcos de juego */
+    --gameboy-light: #8bac0f;
+    --gameboy-dark: #0f380f;
+    --arcade-cabinet: #663931;
+    --arcade-trim: #8b5a2b;
+  }
+  
+  /* Reset básico */
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+  
+  body {
+    color: rgb(var(--foreground-rgb));
+    background: linear-gradient(to bottom, transparent, rgb(var(--background-end-rgb))) rgb(var(--background-start-rgb));
+    background-image: radial-gradient(circle at 25px 25px, rgba(255, 255, 255, 0.2) 2px, transparent 0),
+      radial-gradient(circle at 75px 75px, rgba(255, 255, 255, 0.2) 2px, transparent 0);
+    background-size: 100px 100px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans",
+      "Helvetica Neue", sans-serif;
+  }
+  
+  /* Contenedores */
+  .container {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1rem;
+  }
+  
+  /* Texto con efecto neón */
+  .retro-text {
+    text-shadow: 0 0 5px #fff, 0 0 10px #fff, 0 0 15px var(--neon-pink), 0 0 20px var(--neon-pink), 0 0 25px
+      var(--neon-pink), 0 0 30px var(--neon-pink), 0 0 35px var(--neon-pink);
+    letter-spacing: 2px;
+    font-family: "Press Start 2P", system-ui, sans-serif;
+    animation: textFlicker 4s infinite alternate;
+  }
+  
+  @keyframes textFlicker {
+    0%,
+    19.999%,
+    22%,
+    62.999%,
+    64%,
+    64.999%,
+    70%,
+    100% {
+      opacity: 1;
+      text-shadow: 0 0 5px #fff, 0 0 10px #fff, 0 0 15px var(--neon-pink), 0 0 20px var(--neon-pink), 0 0 25px
+        var(--neon-pink), 0 0 30px var(--neon-pink);
+    }
+    20%,
+    21.999%,
+    63%,
+    63.999%,
+    65%,
+    69.999% {
+      opacity: 0.8;
+      text-shadow: none;
+    }
+  }
+  
+  /* Texto pixelado */
+  .pixel-text {
+    font-family: "Press Start 2P", monospace;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  
+  /* Botón retro */
+  .retro-button {
+    background: linear-gradient(to bottom, #ff9966, #ff5e62);
+    border: 3px solid #fff;
+    box-shadow: 0 0 0 3px #000, 0 0 10px rgba(255, 0, 255, 0.8), inset 0 0 10px rgba(255, 255, 255, 0.5);
+    color: white;
+    font-family: "Press Start 2P", monospace;
+    text-transform: uppercase;
+    padding: 8px 16px;
+    transition: all 0.2s;
+    cursor: pointer;
+  }
+  
+  .retro-button:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 0 3px #000, 0 0 20px rgba(255, 0, 255, 1), inset 0 0 10px rgba(255, 255, 255, 0.8);
+  }
+  
+  .retro-button:active {
+    transform: scale(0.95);
+  }
+  
+  /* Marco retro genérico */
+  .retro-frame {
+    position: relative;
+    border-radius: 20px;
+    padding: 20px;
+    background: #333;
+    box-shadow: 0 0 0 10px #222, 0 0 0 15px #444, inset 0 0 20px rgba(0, 0, 0, 0.5), 0 0 15px rgba(255, 0, 255, 0.5);
+    overflow: hidden;
+  }
+  
+  /* Marco estilo GameBoy */
+  .gameboy-frame {
+    position: relative;
+    border-radius: 10px 10px 50px 10px;
+    padding: 40px 20px 60px;
+    background: var(--gameboy-light);
+    box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.3), 0 0 0 5px var(--gameboy-dark), 0 0 15px rgba(0, 255, 0, 0.5);
+    overflow: hidden;
+  }
+  
+  .gameboy-frame::before {
+    content: "";
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 50px;
+    height: 50px;
+    background: #333;
+    border-radius: 50%;
+    box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.8);
+  }
+  
+  .gameboy-frame::after {
+    content: "";
+    position: absolute;
+    bottom: 15px;
+    left: 30%;
+    width: 15px;
+    height: 15px;
+    background: #f00;
+    border-radius: 50%;
+    box-shadow: 0 0 5px #f00, 0 0 10px rgba(255, 0, 0, 0.8);
+  }
+  
+  .gameboy-screen {
+    background: var(--gameboy-light);
+    border: 5px solid var(--gameboy-dark);
+    border-radius: 5px;
+    overflow: hidden;
+    position: relative;
+  }
+  
+  .gameboy-screen::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.1) 0%,
+      rgba(255, 255, 255, 0) 50%,
+      rgba(0, 0, 0, 0.1) 50%,
+      rgba(0, 0, 0, 0.2) 100%
+    );
+    pointer-events: none;
+    z-index: 10;
+  }
+  
+  /* Marco estilo TV retro */
+  .tv-frame {
+    position: relative;
+    border-radius: 20px;
+    padding: 30px;
+    background: var(--arcade-cabinet);
+    box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.5), 0 0 0 10px var(--arcade-trim), 0 0 15px rgba(0, 255, 255, 0.5);
+    overflow: hidden;
+  }
+  
+  .tv-frame::before {
+    content: "";
+    position: absolute;
+    top: 10px;
+    right: 20px;
+    width: 10px;
+    height: 10px;
+    background: #f00;
+    border-radius: 50%;
+    box-shadow: 0 0 5px #f00;
+    animation: blink 2s infinite;
+  }
+  
+  @keyframes blink {
+    0%,
+    49% {
+      opacity: 1;
+    }
+    50%,
+    100% {
+      opacity: 0.5;
+    }
+  }
+  
+  .tv-screen {
+    position: relative;
+    border-radius: 100px / 20px;
+    overflow: hidden;
+    box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.8);
+  }
+  
+  .tv-screen::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(
+      rgba(255, 255, 255, 0.1),
+      rgba(255, 255, 255, 0) 50%,
+      rgba(0, 0, 0, 0.1) 50%,
+      rgba(0, 0, 0, 0.2)
+    );
+    pointer-events: none;
+    z-index: 10;
+  }
+  
+  /* Efectos de scanline y CRT */
+  @keyframes scanline {
+    0% {
+      transform: translateY(0);
+    }
+    100% {
+      transform: translateY(100%);
+    }
+  }
+  
+  .scanline {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background: rgba(255, 255, 255, 0.1);
+    z-index: 9;
+    animation: scanline 8s linear infinite;
+    pointer-events: none;
+  }
+  
+  /* Efecto de CRT */
+  .crt-effect {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: repeating-linear-gradient(
+      0deg,
+      rgba(0, 0, 0, 0.15),
+      rgba(0, 0, 0, 0.15) 1px,
+      transparent 1px,
+      transparent 2px
+    );
+    pointer-events: none;
+    z-index: 8;
+  }
+  
+  /* Efecto de pixelado */
+  .pixel-effect {
+    image-rendering: pixelated;
+    image-rendering: -moz-crisp-edges;
+    image-rendering: crisp-edges;
+  }
+  
+  /* Efecto de brillo para elementos interactivos */
+  .glow-effect {
+    transition: all 0.3s ease;
+  }
+  
+  .glow-effect:hover {
+    filter: drop-shadow(0 0 5px var(--neon-blue)) brightness(1.2);
+  }
+  
+  /* Animación para los píxeles decorativos */
+  @keyframes pixelPulse {
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.5;
+    }
+  }
+  
+  .pixel-decoration {
+    animation: pixelPulse 2s infinite alternate;
+  }
+  
+  /* Animación de pulso para elementos decorativos */
+  @keyframes pulse {
+    0%,
+    100% {
+      opacity: 1;
+      transform: scale(1);
+    }
+    50% {
+      opacity: 0.7;
+      transform: scale(0.95);
+    }
+  }
+  
+  .animate-pulse {
+    animation: pulse 2s infinite;
+  }
+  
+  /* Utilidades de layout */
+  .min-h-screen {
+    min-height: 100vh;
+  }
+  
+  .flex {
+    display: flex;
+  }
+  
+  .flex-col {
+    flex-direction: column;
+  }
+  
+  .items-center {
+    align-items: center;
+  }
+  
+  .justify-center {
+    justify-content: center;
+  }
+  
+  .justify-between {
+    justify-content: space-between;
+  }
+  
+  .space-x-2 > * + * {
+    margin-left: 0.5rem;
+  }
+  
+  .space-y-2 > * + * {
+    margin-top: 0.5rem;
+  }
+  
+  .mx-auto {
+    margin-left: auto;
+    margin-right: auto;
+  }
+  
+  .my-8 {
+    margin-top: 2rem;
+    margin-bottom: 2rem;
+  }
+  
+  .mt-2 {
+    margin-top: 0.5rem;
+  }
+  
+  .mt-4 {
+    margin-top: 1rem;
+  }
+  
+  .mt-8 {
+    margin-top: 2rem;
+  }
+  
+  .mt-16 {
+    margin-top: 4rem;
+  }
+  
+  .mb-2 {
+    margin-bottom: 0.5rem;
+  }
+  
+  .mb-4 {
+    margin-bottom: 1rem;
+  }
+  
+  .mb-8 {
+    margin-bottom: 2rem;
+  }
+  
+  .mb-12 {
+    margin-bottom: 3rem;
+  }
+  
+  .mb-16 {
+    margin-bottom: 4rem;
+  }
+  
+  .p-2 {
+    padding: 0.5rem;
+  }
+  
+  .p-4 {
+    padding: 1rem;
+  }
+  
+  .px-2 {
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+  }
+  
+  .px-4 {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+  
+  .py-2 {
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+  }
+  
+  .py-4 {
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+  }
+  
+  .py-12 {
+    padding-top: 3rem;
+    padding-bottom: 3rem;
+  }
+  
+  .py-16 {
+    padding-top: 4rem;
+    padding-bottom: 4rem;
+  }
+  
+  .text-center {
+    text-align: center;
+  }
+  
+  .relative {
+    position: relative;
+  }
+  
+  .absolute {
+    position: absolute;
+  }
+  
+  .fixed {
+    position: fixed;
+  }
+  
+  .inset-0 {
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+  }
+  
+  .top-0 {
+    top: 0;
+  }
+  
+  .top-4 {
+    top: 1rem;
+  }
+  
+  .right-4 {
+    right: 1rem;
+  }
+  
+  .bottom-4 {
+    bottom: 1rem;
+  }
+  
+  .z-10 {
+    z-index: 10;
+  }
+  
+  .z-50 {
+    z-index: 50;
+  }
+  
+  /* Grid */
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(1, 1fr);
+    gap: 2rem;
+  }
+  
+  @media (min-width: 640px) {
+    .grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+  
+  @media (min-width: 1024px) {
+    .grid {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+  
+  /* Tamaños */
+  .w-full {
+    width: 100%;
+  }
+  
+  .w-3 {
+    width: 0.75rem;
+  }
+  
+  .w-4 {
+    width: 1rem;
+  }
+  
+  .w-8 {
+    width: 2rem;
+  }
+  
+  .w-10 {
+    width: 2.5rem;
+  }
+  
+  .w-12 {
+    width: 3rem;
+  }
+  
+  .w-32 {
+    width: 8rem;
+  }
+  
+  .h-1 {
+    height: 0.25rem;
+  }
+  
+  .h-2 {
+    height: 0.5rem;
+  }
+  
+  .h-3 {
+    height: 0.75rem;
+  }
+  
+  .h-4 {
+    height: 1rem;
+  }
+  
+  .h-8 {
+    height: 2rem;
+  }
+  
+  .h-10 {
+    height: 2.5rem;
+  }
+  
+  .h-12 {
+    height: 3rem;
+  }
+  
+  .h-full {
+    height: 100%;
+  }
+  
+  /* Bordes */
+  .rounded {
+    border-radius: 0.25rem;
+  }
+  
+  .rounded-full {
+    border-radius: 9999px;
+  }
+  
+  .rounded-sm {
+    border-radius: 0.125rem;
+  }
+  
+  .rounded-lg {
+    border-radius: 0.5rem;
+  }
+  
+  .border {
+    border-width: 1px;
+    border-style: solid;
+  }
+  
+  .border-2 {
+    border-width: 2px;
+    border-style: solid;
+  }
+  
+  .border-4 {
+    border-width: 4px;
+    border-style: solid;
+  }
+  
+  .border-transparent {
+    border-color: transparent;
+  }
+  
+  .border-white {
+    border-color: white;
+  }
+  
+  .border-purple-500 {
+    border-color: #8b5cf6;
+  }
+  
+  .border-green-500 {
+    border-color: #10b981;
+  }
+  
+  /* Colores de texto */
+  .text-white {
+    color: white;
+  }
+  
+  .text-gray-300 {
+    color: #d1d5db;
+  }
+  
+  .text-gray-400 {
+    color: #9ca3af;
+  }
+  
+  .text-gray-500 {
+    color: #6b7280;
+  }
+  
+  .text-gray-800 {
+    color: #1f2937;
+  }
+  
+  .text-red-500 {
+    color: #ef4444;
+  }
+  
+  .text-yellow-400 {
+    color: #facc15;
+  }
+  
+  .text-pink-300 {
+    color: #f9a8d4;
+  }
+  
+  /* Tamaños de texto */
+  .text-xs {
+    font-size: 0.75rem;
+  }
+  
+  .text-sm {
+    font-size: 0.875rem;
+  }
+  
+  .text-lg {
+    font-size: 1.125rem;
+  }
+  
+  .text-xl {
+    font-size: 1.25rem;
+  }
+  
+  .text-2xl {
+    font-size: 1.5rem;
+  }
+  
+  .text-5xl {
+    font-size: 3rem;
+  }
+  
+  @media (min-width: 768px) {
+    .text-7xl {
+      font-size: 4.5rem;
+    }
+  }
+  
+  .font-bold {
+    font-weight: 700;
+  }
+  
+  .tracking-wider {
+    letter-spacing: 0.05em;
+  }
+  
+  /* Fondos */
+  .bg-black {
+    background-color: #000;
+  }
+  
+  .bg-gray-700 {
+    background-color: #374151;
+  }
+  
+  .bg-gray-800 {
+    background-color: #1f2937;
+  }
+  
+  .bg-gray-900 {
+    background-color: #111827;
+  }
+  
+  .bg-green-600 {
+    background-color: #059669;
+  }
+  
+  .bg-yellow-600 {
+    background-color: #d97706;
+  }
+  
+  .bg-red-600 {
+    background-color: #dc2626;
+  }
+  
+  /* Sombras */
+  .shadow-lg {
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  }
+  
+  /* Efectos de fondo */
+  .backdrop-blur-md {
+    backdrop-filter: blur(12px);
+  }
+  
+  .bg-gradient-to-b {
+    background-image: linear-gradient(to bottom, var(--tw-gradient-stops));
+  }
+  
+  .from-gray-900 {
+    --tw-gradient-stops: #111827, var(--tw-gradient-to, rgba(17, 24, 39, 0));
+  }
+  
+  .to-gray-800 {
+    --tw-gradient-to: #1f2937;
+  }
+  
+  .via-gray-800 {
+    --tw-gradient-stops: var(--tw-gradient-from), #1f2937, var(--tw-gradient-to, rgba(31, 41, 55, 0));
+  }
+  
+  .to-black {
+    --tw-gradient-to: #000;
+  }
+  
+  .from-black\/80 {
+    --tw-gradient-from: rgba(0, 0, 0, 0.8);
+  }
+  
+  .to-transparent {
+    --tw-gradient-to: transparent;
+  }
+  
+  /* Transiciones */
+  .transition-all {
+    transition-property: all;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    transition-duration: 300ms;
+  }
+  
+  .duration-300 {
+    transition-duration: 300ms;
+  }
+  
+  /* Visibilidad */
+  .hidden {
+    display: none;
+  }
+  
+  .overflow-hidden {
+    overflow: hidden;
+  }
+  
+  /* Fuente para cargar en el layout */
+  @font-face {
+    font-family: "Press Start 2P";
+    font-style: normal;
+    font-weight: 400;
+    src: url(https://fonts.gstatic.com/s/pressstart2p/v14/e3t4euO8T-267oIAQAu6jDQyK3nVivM.woff2) format("woff2");
+    unicode-range:
+      U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+    font-display: swap;
+  }
+  
+  /* Antialiased text */
+  .antialiased {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  
+  /* Estilos para imágenes en Vite */
+  .game-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }

@@ -1,0 +1,240 @@
+.home-main {
+    min-height: 100vh;
+    background: linear-gradient(to bottom, #111827, #1f2937, #000);
+    color: white;
+    overflow: hidden;
+    position: relative;
+}
+
+.background-decorations {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+}
+
+.background-grid {
+    position: absolute;
+    inset: 0;
+    background-image: radial-gradient(rgba(255, 0, 255, 0.1) 1px, transparent 1px);
+    background-size: 40px 40px;
+}
+
+.decoration-circle-1 {
+    position: absolute;
+    top: 25%;
+    left: 25%;
+    width: 16rem;
+    height: 16rem;
+    border-radius: 9999px;
+    background-color: rgba(139, 92, 246, 0.1);
+    filter: blur(3rem);
+}
+
+.decoration-circle-2 {
+    position: absolute;
+    top: 75%;
+    right: 25%;
+    width: 24rem;
+    height: 24rem;
+    border-radius: 9999px;
+    background-color: rgba(59, 130, 246, 0.1);
+    filter: blur(3rem);
+}
+
+.decoration-line-top {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(to right, transparent, rgba(236, 72, 153, 0.5), transparent);
+}
+
+.decoration-line-bottom {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(to right, transparent, rgba(59, 130, 246, 0.5), transparent);
+}
+
+.home-content {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1rem;
+    padding-top: 3rem;
+    padding-bottom: 3rem;
+    position: relative;
+    z-index: 10;
+}
+
+.home-header {
+    text-align: center;
+    margin-bottom: 4rem;
+}
+
+.title-container {
+    position: relative;
+    display: inline-block;
+}
+
+.home-title {
+    font-size: 3rem;
+    font-weight: bold;
+    margin-bottom: 2rem;
+    position: relative;
+    z-index: 10;
+    letter-spacing: 0.05em;
+}
+
+@media (min-width: 768px) {
+    .home-title {
+        font-size: 4.5rem;
+    }
+}
+
+.title-bg {
+    position: absolute;
+    inset: -0.25rem;
+    background: linear-gradient(to right, rgba(236, 72, 153, 0.2), rgba(139, 92, 246, 0.2), rgba(59, 130, 246, 0.2));
+    filter: blur(1rem);
+    border-radius: 9999px;
+    z-index: -10;
+}
+
+.decorative-line {
+    width: 8rem;
+    height: 1px;
+    background: linear-gradient(to right, #ec4899, #8b5cf6, #3b82f6);
+    margin: 2rem auto;
+}
+
+.home-description {
+    text-align: center;
+    margin-bottom: 3rem;
+    color: #d1d5db;
+    max-width: 36rem;
+    margin-left: auto;
+    margin-right: auto;
+    font-size: 1.125rem;
+}
+
+.description-highlight {
+    display: block;
+    margin-top: 0.5rem;
+    color: #f9a8d4;
+}
+
+.decorative-controls {
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+    margin-bottom: 3rem;
+}
+
+.control-circle {
+    width: 3rem;
+    height: 3rem;
+    border-radius: 9999px;
+    border: 2px solid;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+.control-circle-blue {
+    border-color: rgba(59, 130, 246, 0.5);
+}
+
+.control-circle-pink {
+    border-color: rgba(236, 72, 153, 0.5);
+}
+
+.control-circle-purple {
+    border-color: rgba(139, 92, 246, 0.5);
+}
+
+.control-dot {
+    width: 1rem;
+    height: 1rem;
+    border-radius: 9999px;
+    animation: pulse 2s infinite;
+}
+
+.control-dot-blue {
+    background-color: rgba(59, 130, 246, 0.7);
+}
+
+.control-dot-pink {
+    background-color: rgba(236, 72, 153, 0.7);
+}
+
+.control-dot-purple {
+    background-color: rgba(139, 92, 246, 0.7);
+}
+
+.games-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 2rem;
+}
+
+@media (min-width: 640px) {
+    .games-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (min-width: 1024px) {
+    .games-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+.pixel-decoration {
+    margin-top: 4rem;
+    display: flex;
+    justify-content: center;
+}
+
+.pixel-row {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.pixel {
+    width: 0.75rem;
+    height: 0.75rem;
+    border-radius: 0.125rem;
+}
+
+.pixel-1 {
+    background-color: #ff00ff;
+    animation: pixelPulse 1.5s infinite;
+}
+
+.pixel-2 {
+    background-color: #00ffff;
+    animation: pixelPulse 1.5s infinite 0.2s;
+}
+
+.pixel-3 {
+    background-color: #ffff00;
+    animation: pixelPulse 1.5s infinite 0.4s;
+}
+
+.pixel-4 {
+    background-color: #39ff14;
+    animation: pixelPulse 1.5s infinite 0.6s;
+}
+
+.footer {
+    text-align: center;
+    margin-top: 2rem;
+    font-size: 0.875rem;
+    color: #6b7280;
+}

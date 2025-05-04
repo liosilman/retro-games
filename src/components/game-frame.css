@@ -1,0 +1,125 @@
+.game-frame-container {
+    width: 100%;
+    max-width: 4xl;
+    margin: 0 auto;
+}
+
+.game-frame-title {
+    margin-bottom: 1rem;
+    text-align: center;
+}
+
+.game-frame-title h2 {
+    font-size: 1.25rem;
+    font-weight: bold;
+    color: #facc15;
+}
+
+.tv-frame {
+    position: relative;
+    border-radius: 20px;
+    padding: 30px;
+    background: var(--arcade-cabinet);
+    box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.5), 0 0 0 10px var(--arcade-trim), 0 0 15px rgba(0, 255, 255, 0.5);
+    overflow: hidden;
+}
+
+.tv-frame::before {
+    content: "";
+    position: absolute;
+    top: 10px;
+    right: 20px;
+    width: 10px;
+    height: 10px;
+    background: #f00;
+    border-radius: 50%;
+    box-shadow: 0 0 5px #f00;
+    animation: blink 2s infinite;
+}
+
+.tv-screen {
+    position: relative;
+    border-radius: 100px / 20px;
+    overflow: hidden;
+    box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.8);
+    background-color: black;
+}
+
+.gameboy-frame {
+    position: relative;
+    border-radius: 10px 10px 50px 10px;
+    padding: 40px 20px 60px;
+    background: var(--gameboy-light);
+    box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.3), 0 0 0 5px var(--gameboy-dark), 0 0 15px rgba(0, 255, 0, 0.5);
+    overflow: hidden;
+}
+
+.gameboy-frame::before {
+    content: "";
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 50px;
+    height: 50px;
+    background: #333;
+    border-radius: 50%;
+    box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.8);
+}
+
+.gameboy-frame::after {
+    content: "";
+    position: absolute;
+    bottom: 15px;
+    left: 30%;
+    width: 15px;
+    height: 15px;
+    background: #f00;
+    border-radius: 50%;
+    box-shadow: 0 0 5px #f00, 0 0 10px rgba(255, 0, 0, 0.8);
+}
+
+.gameboy-screen {
+    background: var(--gameboy-light);
+    border: 5px solid var(--gameboy-dark);
+    border-radius: 5px;
+    overflow: hidden;
+    position: relative;
+}
+
+.frame-controls {
+    margin-top: 1rem;
+    display: flex;
+    justify-content: center;
+}
+
+.control-buttons {
+    display: flex;
+    gap: 3rem;
+}
+
+.control-button {
+    width: 3rem;
+    height: 3rem;
+    border-radius: 9999px;
+    background-color: #374151;
+}
+
+.control-button.glow-effect {
+    transition: all 0.3s ease;
+}
+
+.control-indicator {
+    position: absolute;
+    bottom: 1rem;
+    right: 2rem;
+    display: flex;
+    gap: 0.5rem;
+}
+
+.indicator-light {
+    width: 1.5rem;
+    height: 0.5rem;
+    background-color: #1f2937;
+    border-radius: 0.25rem;
+}
