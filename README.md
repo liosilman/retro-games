@@ -59,4 +59,4 @@ Retro Games es una colección de juegos clásicos recreados con tecnologías web
 1. Clona el repositorio:
    ```bash
    git clone https://github.com/tu-usuario/retro-games.git
-   cd retro-gamesgi
+   cd retro-games

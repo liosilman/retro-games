@@ -1,30 +1,37 @@
-import { useEffect } from 'react'
-import { useParams, Navigate } from 'react-router-dom'
-import { GameFrame } from '../components/game-frame'
-import { GameNavigation } from '../components/game-navigation'
-import { games } from '../lib/games'
-import Snake from '../components/games/snake'
-import Tetris from '../components/games/tetris'
-import Pong from '../components/games/pong'
-import Breakout from '../components/games/breakout'
-import Pacman from '../components/games/pacman'
-import SpaceInvaders from '../components/games/space-invaders'
-import { useSound } from '../contexts/sound-context'
-import './game-page.css'
+"use client"
+
+import { useEffect } from "react"
+import { useParams, Navigate } from "react-router-dom"
+import { GameFrame } from "../components/game-frame"
+import { GameNavigation } from "../components/game-navigation"
+import { games } from "../lib/games"
+import Snake from "../components/games/snake"
+import Tetris from "../components/games/tetris"
+import Pong from "../components/games/pong"
+import Breakout from "../components/games/breakout"
+import Pacman from "../components/games/pacman"
+import SpaceInvaders from "../components/games/space-invaders"
+import Chess from "../components/games/chess"
+import Doom from "../components/games/doom"
+import Sudoku from "../components/games/sudoku"
+import { useSound } from "../contexts/sound-context"
+import "./game-page.css"
+import { FullscreenToggle } from "../components/fullscreen-toggle"
 
 export default function GamePage() {
     const { gameId } = useParams()
     const { playSound } = useSound()
     const game = games.find((g) => g.id === gameId)
 
+    useEffect(() => {
+        if (game) {
+            playSound("start")
+        }
+    }, [game, playSound])
+
     if (!game) {
         return <Navigate to="/" />
     }
-
-    // Reproducir sonido de inicio cuando se carga la página
-    useEffect(() => {
-        playSound("start")
-    }, [playSound])
 
     // Render the appropriate game component based on the game ID
     const renderGame = () => {
@@ -41,6 +48,12 @@ export default function GamePage() {
                 return <Pacman />
             case "space-invaders":
                 return <SpaceInvaders />
+            case "chess":
+                return <Chess />
+            case "doom":
+                return <Doom />
+            case "sudoku":
+                return <Sudoku />
             default:
                 return <div className="game-not-available">Juego no disponible</div>
         }
@@ -49,6 +62,7 @@ export default function GamePage() {
     return (
         <main className="game-page">
             <GameNavigation />
+            <FullscreenToggle />
 
             <div className="game-container">
                 <GameFrame frameType={game.frameType} title={game.name}>

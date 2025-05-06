@@ -1,9 +1,11 @@
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { Menu, X, Home, ChevronUp } from 'lucide-react'
-import { games } from '../lib/games'
-import { useSound } from '../contexts/sound-context'
-import './game-navigation.css'
+"use client"
+
+import { useState } from "react"
+import { Menu, X, Home, ChevronUp } from "lucide-react"
+import { games } from "../lib/games"
+import { useSound } from "../contexts/sound-context"
+import { useNavigate } from "react-router-dom"
+import "./game-navigation.css"
 
 export function GameNavigation() {
     const [isOpen, setIsOpen] = useState(false)

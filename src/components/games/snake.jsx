@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react"
 import { DifficultySelector } from "../difficulty-selector"
-import { useSound } from "@/contexts/sound-context"
+import { useSound } from "../../contexts/sound-context"
 
 export default function SnakeGame() {
   const canvasRef = useRef(null)
