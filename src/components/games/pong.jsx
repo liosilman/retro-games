@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react"
 import { DifficultySelector } from "../difficulty-selector"
 import { HighScore } from "../high-score"
 import { useSound } from "../../contexts/sound-context"
+import { ControlPad } from "../control-pad"
 import "../pause-button.css"
 
 export default function PongGame() {
@@ -14,6 +15,22 @@ export default function PongGame() {
     const [difficulty, setDifficulty] = useState("normal")
     const [winner, setWinner] = useState(null)
     const { playSound } = useSound()
+    const [isTouchDevice, setIsTouchDevice] = useState(false)
+    const paddleYRef = useRef(0)
+
+    // Detectar si es un dispositivo táctil
+    useEffect(() => {
+        const checkTouchDevice = () => {
+            setIsTouchDevice("ontouchstart" in window || navigator.maxTouchPoints > 0 || window.innerWidth <= 768)
+        }
+
+        checkTouchDevice()
+        window.addEventListener("resize", checkTouchDevice)
+
+        return () => {
+            window.removeEventListener("resize", checkTouchDevice)
+        }
+    }, [])
 
     useEffect(() => {
         const canvas = canvasRef.current
@@ -54,6 +71,7 @@ export default function PongGame() {
         const ballSize = 8
 
         let playerY = height / 2 - paddleHeight / 2
+        paddleYRef.current = playerY
         let cpuY = height / 2 - paddleHeight / 2
         let ballX = width / 2
         let ballY = height / 2
@@ -108,6 +126,7 @@ export default function PongGame() {
             // Ball collision with top and bottom
             if (ballY < 0 || ballY > height) {
                 ballSpeedY = -ballSpeedY
+                playSound("click")
             }
 
             // Determine which paddle to check
@@ -129,6 +148,8 @@ export default function PongGame() {
                 // Adjust ball angle based on where it hit the paddle
                 const hitPos = (ballY - (paddle.y + paddle.height / 2)) / (paddle.height / 2)
                 ballSpeedY = hitPos * 5
+
+                playSound("click")
             }
 
             // Ball out of bounds
@@ -136,6 +157,7 @@ export default function PongGame() {
                 cpuScore++
                 setScore({ player: playerScore, cpu: cpuScore })
                 resetBall()
+                playSound("back")
                 if (cpuScore >= 5) {
                     setGameOver(true)
                     setWinner("cpu")
@@ -146,6 +168,7 @@ export default function PongGame() {
                 playerScore++
                 setScore({ player: playerScore, cpu: cpuScore })
                 resetBall()
+                playSound("success")
                 if (playerScore >= 5) {
                     setGameOver(true)
                     setWinner("player")
@@ -193,12 +216,15 @@ export default function PongGame() {
             const rect = canvas.getBoundingClientRect()
             const mouseY = e.clientY - rect.top
             playerY = mouseY - paddleHeight / 2
+            paddleYRef.current = playerY
 
             // Keep paddle within bounds
             if (playerY < 0) {
                 playerY = 0
+                paddleYRef.current = 0
             } else if (playerY > height - paddleHeight) {
                 playerY = height - paddleHeight
+                paddleYRef.current = height - paddleHeight
             }
         }
 
@@ -207,12 +233,15 @@ export default function PongGame() {
             const rect = canvas.getBoundingClientRect()
             touchY = e.touches[0].clientY - rect.top
             playerY = touchY - paddleHeight / 2
+            paddleYRef.current = playerY
 
             // Keep paddle within bounds
             if (playerY < 0) {
                 playerY = 0
+                paddleYRef.current = 0
             } else if (playerY > height - paddleHeight) {
                 playerY = height - paddleHeight
+                paddleYRef.current = height - paddleHeight
             }
         }
 
@@ -258,6 +287,46 @@ export default function PongGame() {
         playSound("start")
     }
 
+    // Manejar controles desde el pad
+    const handleDirectionChange = (direction) => {
+        if (gameOver || isPaused) return
+
+        const canvas = canvasRef.current
+        if (!canvas) return
+
+        const height = canvas.height
+        const paddleHeight = 60
+        let newY = paddleYRef.current
+
+        if (direction === "up") {
+            newY -= 15
+        } else if (direction === "down") {
+            newY += 15
+        }
+
+        // Keep paddle within bounds
+        if (newY < 0) {
+            newY = 0
+        } else if (newY > height - paddleHeight) {
+            newY = height - paddleHeight
+        }
+
+        paddleYRef.current = newY
+    }
+
+    const handleButtonPress = (button) => {
+        if (gameOver) {
+            if (button === "a") {
+                resetGame()
+            }
+            return
+        }
+
+        if (button === "b") {
+            setIsPaused(!isPaused)
+        }
+    }
+
     return (
         <div className="relative w-full h-full flex flex-col items-center justify-center p-2">
             <div className="mb-2 flex justify-between w-full px-2">
@@ -276,25 +345,33 @@ export default function PongGame() {
 
             <canvas ref={canvasRef} width={400} height={300} className="border border-gray-700 bg-black" />
 
+            {/* Control Pad para dispositivos móviles */}
+            {isTouchDevice && <ControlPad onDirectionChange={handleDirectionChange} onButtonPress={handleButtonPress} />}
+
             {/* Componente de puntuaciones altas */}
             <HighScore gameId="pong" />
 
             {gameOver && (
-                <div className="absolute inset-0 bg-black/80 flex flex-col items-center justify-center backdrop-blur-sm">
-                    <h3 className="text-xl font-bold mb-2 text-yellow-500">Game Over</h3>
-                    <p className="mb-4">{winner === "player" ? "¡Has ganado!" : "Has perdido"}</p>
-                    <button
-                        onClick={resetGame}
-                        className="bg-gradient-to-r from-yellow-600 to-yellow-800 hover:from-yellow-500 hover:to-yellow-700 text-white px-4 py-2 rounded-md shadow-lg border border-yellow-700 transition-all duration-200"
-                    >
-                        Jugar de nuevo
-                    </button>
+                <div className="absolute inset-0 bg-black/80 flex flex-col items-center justify-center z-50">
+                    <div className="bg-gray-900 p-6 rounded-lg border-2 border-blue-500 shadow-lg max-w-xs w-full">
+                        <h3 className="text-xl font-bold mb-2 text-center">Game Over</h3>
+                        <p className="mb-4 text-center">{winner === "player" ? "¡Has ganado!" : "Has perdido"}</p>
+                        <button
+                            onClick={resetGame}
+                            className="bg-gradient-to-r from-blue-600 to-blue-800 hover:from-blue-500 hover:to-blue-700 
+                       text-white px-4 py-2 rounded-md shadow-lg border border-blue-700 
+                       transition-all duration-200 w-full"
+                        >
+                            Jugar de nuevo
+                        </button>
+                    </div>
                 </div>
             )}
 
             <div className="mt-2 text-xs text-center">
                 <p>Mueve el ratón o desliza para controlar la paleta</p>
                 <p>Primero en llegar a 5 puntos gana</p>
+                {isTouchDevice && <p className="text-gray-400 text-[10px] mt-1">Usa el pad para mover arriba y abajo</p>}
             </div>
         </div>
     )
