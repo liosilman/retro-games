@@ -5,6 +5,7 @@ import { DifficultySelector } from "../difficulty-selector"
 import { HighScore } from "../high-score"
 import { useSound } from "../../contexts/sound-context"
 import "../pause-button.css"
+import { ControlPad } from "../control-pad"
 
 export default function DoomGame() {
     const canvasRef = useRef(null)
@@ -721,6 +722,49 @@ export default function DoomGame() {
         playSound("start")
     }
 
+    // Manejar controles desde el pad
+    const handleDirectionChange = (direction) => {
+        if (!direction) {
+            keysRef.current["ArrowUp"] = false
+            keysRef.current["ArrowDown"] = false
+            keysRef.current["ArrowLeft"] = false
+            keysRef.current["ArrowRight"] = false
+            keysRef.current["w"] = false
+            keysRef.current["s"] = false
+            keysRef.current["a"] = false
+            keysRef.current["d"] = false
+            return
+        }
+
+        // Establecer nueva dirección
+        switch (direction) {
+            case "up":
+                keysRef.current["ArrowUp"] = true
+                keysRef.current["w"] = true
+                break
+            case "down":
+                keysRef.current["ArrowDown"] = true
+                keysRef.current["s"] = true
+                break
+            case "left":
+                keysRef.current["ArrowLeft"] = true
+                keysRef.current["a"] = true
+                break
+            case "right":
+                keysRef.current["ArrowRight"] = true
+                keysRef.current["d"] = true
+                break
+        }
+    }
+
+    const handleButtonPress = (button) => {
+        if (button === "a") {
+            shoot()
+        } else if (button === "b") {
+            setIsPaused(!isPaused)
+        }
+    }
+
     // Modificar el componente para mostrar correctamente los valores actuales
     return (
         <div className="relative w-full h-full flex flex-col items-center justify-center p-2">
@@ -753,6 +797,9 @@ export default function DoomGame() {
                 height={240}
                 className="border border-gray-700 bg-black shadow-lg rounded-md"
             />
+
+            {/* Control Pad para dispositivos móviles */}
+            <ControlPad onDirectionChange={handleDirectionChange} onButtonPress={handleButtonPress} />
 
             {/* Componente de puntuaciones altas */}
             <HighScore gameId="doom" />

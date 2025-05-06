@@ -401,22 +401,32 @@ export default function SudokuGame() {
 
             {/* Teclado numérico para dispositivos móviles */}
             {showNumpad && selectedCell && (
-                <div className="mt-4 grid grid-cols-3 gap-2 w-full max-w-xs">
-                    {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((num) => (
+                <div className="mt-4 p-3 bg-blue-900/80 rounded-lg border border-blue-500 shadow-lg">
+                    <div className="grid grid-cols-3 gap-3 w-full max-w-xs">
+                        {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((num) => (
+                            <button
+                                key={num}
+                                onClick={() => handleNumberInput(num)}
+                                className="bg-gradient-to-b from-blue-500 to-blue-700 hover:from-blue-400 hover:to-blue-600 
+                           text-white font-bold py-4 px-4 rounded-lg shadow-md 
+                           active:transform active:scale-95 transition-all duration-150
+                           border border-blue-400"
+                            >
+                                {num}
+                            </button>
+                        ))}
+                    </div>
+                    <div className="mt-3 grid grid-cols-1">
                         <button
-                            key={num}
-                            onClick={() => handleNumberInput(num)}
-                            className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-4 rounded"
+                            onClick={handleClearCell}
+                            className="bg-gradient-to-b from-red-500 to-red-700 hover:from-red-400 hover:to-red-600 
+                         text-white font-bold py-3 px-4 rounded-lg shadow-md 
+                         active:transform active:scale-95 transition-all duration-150
+                         border border-red-400"
                         >
-                            {num}
+                            Borrar
                         </button>
-                    ))}
-                    <button
-                        onClick={handleClearCell}
-                        className="col-span-3 bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-4 rounded"
-                    >
-                        Borrar
-                    </button>
+                    </div>
                 </div>
             )}
 

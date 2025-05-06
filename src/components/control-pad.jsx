@@ -12,7 +12,16 @@ export function ControlPad({ onDirectionChange, onButtonPress }) {
 
     // Detectar si es un dispositivo táctil
     useEffect(() => {
-        setIsTouchDevice("ontouchstart" in window || navigator.maxTouchPoints > 0)
+        const checkTouchDevice = () => {
+            setIsTouchDevice("ontouchstart" in window || navigator.maxTouchPoints > 0 || window.innerWidth <= 768)
+        }
+
+        checkTouchDevice()
+        window.addEventListener("resize", checkTouchDevice)
+
+        return () => {
+            window.removeEventListener("resize", checkTouchDevice)
+        }
     }, [])
 
     // Función para manejar pulsación de dirección

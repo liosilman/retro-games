@@ -346,12 +346,14 @@ export default function SnakeGame() {
       <HighScore gameId="snake" />
 
       {gameOver && (
-        <div className="game-over-screen absolute inset-0 flex flex-col items-center justify-center">
-          <h3 className="text-xl font-bold mb-2 pixel-text text-red-500">Game Over</h3>
-          <p className="mb-4 pixel-text">Score: {score}</p>
-          <button onClick={resetGame} className="retro-button">
-            Play Again
-          </button>
+        <div className="absolute inset-0 bg-black/80 flex flex-col items-center justify-center z-10">
+          <div className="bg-gray-900 p-6 rounded-lg border-2 border-green-500 shadow-lg max-w-xs w-full">
+            <h3 className="text-xl font-bold mb-2 pixel-text text-red-500 text-center">Game Over</h3>
+            <p className="mb-4 pixel-text text-center">Score: {score}</p>
+            <button onClick={resetGame} className="retro-button w-full">
+              Play Again
+            </button>
+          </div>
         </div>
       )}
 
