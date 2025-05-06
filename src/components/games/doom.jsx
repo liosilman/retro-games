@@ -2,21 +2,24 @@
 
 import { useEffect, useRef, useState } from "react"
 import { DifficultySelector } from "../difficulty-selector"
-import { ControlPad } from "../control-pad"
+import { HighScore } from "../high-score"
 import { useSound } from "../../contexts/sound-context"
+import "../pause-button.css"
 
 export default function DoomGame() {
     const canvasRef = useRef(null)
-    const [gameOver, setGameOver] = useState(false)
-    const [isPaused, setIsPaused] = useState(false)
-    const [difficulty, setDifficulty] = useState("normal")
     const [score, setScore] = useState(0)
     const [health, setHealth] = useState(100)
     const [ammo, setAmmo] = useState(50)
+    const [gameOver, setGameOver] = useState(false)
+    const [isPaused, setIsPaused] = useState(false)
+    const [difficulty, setDifficulty] = useState("normal")
+    const [level, setLevel] = useState(1)
+    const [enemiesKilled, setEnemiesKilled] = useState(0)
+    const [message, setMessage] = useState("")
     const { playSound } = useSound()
 
     // Referencias para el estado del juego
-    const gameLoopRef = useRef(null)
     const playerRef = useRef({
         x: 2.5,
         y: 2.5,
@@ -27,25 +30,68 @@ export default function DoomGame() {
     const enemiesRef = useRef([])
     const lastShotTimeRef = useRef(0)
     const weaponFrameRef = useRef(0)
+    const gameLoopRef = useRef(null)
+    const messageTimeoutRef = useRef(null)
 
     // Mapa del nivel (1 = pared, 0 = espacio vacío)
-    const MAP = [
-        [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-        [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-        [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-        [1, 0, 0, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 0, 0, 1],
-        [1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1],
-        [1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1],
-        [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-        [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-        [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-        [1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1],
-        [1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1],
-        [1, 0, 0, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 0, 0, 1],
-        [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-        [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-        [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-        [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+    const MAPS = [
+        // Nivel 1
+        [
+            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+            [1, 0, 0, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 0, 0, 1],
+            [1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1],
+            [1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1],
+            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+            [1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1],
+            [1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1],
+            [1, 0, 0, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 0, 0, 1],
+            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+        ],
+        // Nivel 2
+        [
+            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+            [1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 1],
+            [1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 1],
+            [1, 0, 0, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 0, 0, 1],
+            [1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1],
+            [1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1],
+            [1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1],
+            [1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 1],
+            [1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 1],
+            [1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1],
+            [1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1],
+            [1, 0, 0, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 0, 0, 1],
+            [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1],
+            [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1],
+            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+        ],
+        // Nivel 3
+        [
+            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+            [1, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1],
+            [1, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1],
+            [1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1],
+            [1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 1],
+            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+            [1, 1, 1, 1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 1, 1],
+            [1, 1, 1, 1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 1, 1],
+            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+            [1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 1],
+            [1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1],
+            [1, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1],
+            [1, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1],
+            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+        ],
     ]
 
     // Colores para las paredes
@@ -63,6 +109,9 @@ export default function DoomGame() {
             if (gameLoopRef.current) {
                 cancelAnimationFrame(gameLoopRef.current)
             }
+            if (messageTimeoutRef.current) {
+                clearTimeout(messageTimeoutRef.current)
+            }
         }
     }, [difficulty])
 
@@ -76,41 +125,93 @@ export default function DoomGame() {
             speed: difficulty === "easy" ? 0.04 : difficulty === "hard" ? 0.06 : 0.05,
         }
 
+        // Reiniciar nivel
+        setLevel(1)
+
         // Reiniciar enemigos
-        enemiesRef.current = [
-            { x: 5.5, y: 5.5, health: difficulty === "easy" ? 80 : difficulty === "hard" ? 120 : 100, type: 0 },
-            { x: 10.5, y: 5.5, health: difficulty === "easy" ? 80 : difficulty === "hard" ? 120 : 100, type: 0 },
-            { x: 5.5, y: 10.5, health: difficulty === "easy" ? 80 : difficulty === "hard" ? 120 : 100, type: 0 },
-            { x: 10.5, y: 10.5, health: difficulty === "easy" ? 80 : difficulty === "hard" ? 120 : 100, type: 0 },
-        ]
+        createEnemies(1)
 
         // Reiniciar puntuación y salud
         setScore(0)
         setHealth(difficulty === "easy" ? 120 : difficulty === "hard" ? 80 : 100)
         setAmmo(difficulty === "easy" ? 60 : difficulty === "hard" ? 40 : 50)
+        setEnemiesKilled(0)
 
         // Reiniciar estado del juego
         setGameOver(false)
         setIsPaused(false)
         weaponFrameRef.current = 0
 
+        // Mostrar mensaje de inicio
+        showMessage("¡Bienvenido a DOOM! Nivel 1")
+
         // Iniciar el bucle del juego
         if (gameLoopRef.current) {
             cancelAnimationFrame(gameLoopRef.current)
         }
-        gameLoop()
+
+        // Pequeño retraso para asegurar que los estados se hayan actualizado
+        setTimeout(() => {
+            gameLoop()
+        }, 50)
+    }
+
+    // Crear enemigos según el nivel
+    const createEnemies = (currentLevel) => {
+        const enemyCount = Math.min(4 + currentLevel, 10)
+        const enemyHealth = difficulty === "easy" ? 80 : difficulty === "hard" ? 120 : 100
+
+        enemiesRef.current = []
+
+        // Posiciones predefinidas para evitar que aparezcan en paredes
+        const positions = [
+            { x: 5.5, y: 5.5 },
+            { x: 10.5, y: 5.5 },
+            { x: 5.5, y: 10.5 },
+            { x: 10.5, y: 10.5 },
+            { x: 8.0, y: 8.0 },
+            { x: 3.5, y: 12.5 },
+            { x: 12.5, y: 3.5 },
+            { x: 12.5, y: 12.5 },
+            { x: 3.5, y: 3.5 },
+            { x: 8.0, y: 3.5 },
+        ]
+
+        for (let i = 0; i < enemyCount; i++) {
+            if (i < positions.length) {
+                enemiesRef.current.push({
+                    x: positions[i].x,
+                    y: positions[i].y,
+                    health: enemyHealth + currentLevel * 10,
+                    type: Math.floor(Math.random() * 3),
+                    speed: (0.01 + currentLevel * 0.002) * (difficulty === "easy" ? 0.8 : difficulty === "hard" ? 1.2 : 1),
+                })
+            }
+        }
+    }
+
+    // Mostrar mensaje temporal
+    const showMessage = (msg) => {
+        setMessage(msg)
+        if (messageTimeoutRef.current) {
+            clearTimeout(messageTimeoutRef.current)
+        }
+        messageTimeoutRef.current = setTimeout(() => {
+            setMessage("")
+        }, 3000)
     }
 
     // Función para comprobar si una posición es una pared
     const isWall = (x, y) => {
         const mapX = Math.floor(x)
         const mapY = Math.floor(y)
+        const currentMap = MAPS[level - 1] || MAPS[0]
 
-        if (mapX < 0 || mapX >= MAP[0].length || mapY < 0 || mapY >= MAP.length) {
+        if (mapX < 0 || mapX >= currentMap[0].length || mapY < 0 || mapY >= currentMap.length) {
             return true
         }
 
-        return MAP[mapY][mapX] > 0
+        return currentMap[mapY][mapX] > 0
     }
 
     // Función para disparar
@@ -122,7 +223,7 @@ export default function DoomGame() {
         if (now - lastShotTimeRef.current < 500) return
 
         lastShotTimeRef.current = now
-        setAmmo((prev) => prev - 1)
+        setAmmo((prev) => Math.max(0, prev - 1))
 
         // Animar arma
         weaponFrameRef.current = 1
@@ -154,12 +255,35 @@ export default function DoomGame() {
                     if (enemy.health <= 0) {
                         enemies.splice(i, 1)
                         setScore((prev) => prev + 100)
+                        setEnemiesKilled((prev) => prev + 1)
                         playSound("success")
 
-                        // Comprobar victoria
+                        // Comprobar victoria del nivel
                         if (enemies.length === 0) {
-                            setGameOver(true)
-                            playSound("success")
+                            if (level < MAPS.length) {
+                                // Avanzar al siguiente nivel
+                                setLevel((prev) => {
+                                    const newLevel = prev + 1
+                                    createEnemies(newLevel)
+                                    showMessage(`¡Nivel ${newLevel} completado!`)
+
+                                    // Recargar munición y dar bonus de salud
+                                    setAmmo((prev) => Math.min(prev + 30, 99))
+                                    setHealth((prev) => Math.min(prev + 20, 100))
+
+                                    // Reposicionar jugador
+                                    playerRef.current.x = 2.5
+                                    playerRef.current.y = 2.5
+
+                                    return newLevel
+                                })
+                            } else {
+                                // Victoria final
+                                setGameOver(true)
+                                showMessage("¡Has completado el juego!")
+                                playSound("success")
+                                saveHighScore()
+                            }
                         }
                     }
                     break
@@ -180,6 +304,10 @@ export default function DoomGame() {
 
         // Renderizar juego
         renderGame()
+
+        // Sincronizar estados de React con las referencias
+        setAmmo(Math.max(0, ammo))
+        setEnemiesKilled(enemiesKilled)
 
         gameLoopRef.current = requestAnimationFrame(gameLoop)
     }
@@ -226,18 +354,20 @@ export default function DoomGame() {
             // Si el enemigo está cerca, atacar al jugador
             if (distance < 0.5) {
                 setHealth((prev) => {
-                    const newHealth = prev - 1
+                    const damage = difficulty === "easy" ? 0.5 : difficulty === "hard" ? 2 : 1
+                    const newHealth = prev - damage
                     if (newHealth <= 0) {
                         setGameOver(true)
                         playSound("gameOver")
+                        saveHighScore()
                     }
-                    return newHealth
+                    return newHealth > 0 ? newHealth : 0
                 })
             }
             // Si el enemigo está a distancia media, moverse hacia el jugador
             else if (distance < 8) {
                 const angle = Math.atan2(dy, dx)
-                const speed = 0.02
+                const speed = enemy.speed || 0.02
 
                 const newX = enemy.x + Math.cos(angle) * speed
                 const newY = enemy.y + Math.sin(angle) * speed
@@ -260,6 +390,7 @@ export default function DoomGame() {
         const width = canvas.width
         const height = canvas.height
         const player = playerRef.current
+        const currentMap = MAPS[level - 1] || MAPS[0]
 
         // Limpiar canvas
         ctx.fillStyle = "#000"
@@ -286,7 +417,7 @@ export default function DoomGame() {
 
         for (let i = 0; i < rayCount; i++) {
             const rayAngle = player.angle - FOV / 2 + rayStep * i
-            const [distance, wallType] = castRay(player.x, player.y, rayAngle)
+            const [distance, wallType] = castRay(player.x, player.y, rayAngle, currentMap)
 
             // Corregir efecto ojo de pez
             const correctedDistance = distance * Math.cos(rayAngle - player.angle)
@@ -304,7 +435,15 @@ export default function DoomGame() {
             const g = Number.parseInt(wallColor.slice(3, 5), 16) * brightness
             const b = Number.parseInt(wallColor.slice(5, 7), 16) * brightness
             ctx.fillStyle = `rgb(${r}, ${g}, ${b})`
+
+            // Dibujar textura de pared
             ctx.fillRect(i, wallTop, 1, wallHeight)
+
+            // Añadir efecto de líneas horizontales para simular textura
+            if (Math.floor(wallTop + wallHeight / 2) % 4 === 0) {
+                ctx.fillStyle = `rgba(0, 0, 0, 0.3)`
+                ctx.fillRect(i, wallTop, 1, wallHeight)
+            }
         }
 
         // Dibujar enemigos
@@ -315,10 +454,20 @@ export default function DoomGame() {
 
         // Dibujar HUD
         drawHUD(ctx, width, height)
+
+        // Dibujar mensaje
+        if (message) {
+            ctx.fillStyle = "rgba(0, 0, 0, 0.7)"
+            ctx.fillRect(width / 2 - 150, height / 2 - 25, 300, 50)
+            ctx.fillStyle = "#FFF"
+            ctx.font = "16px Arial"
+            ctx.textAlign = "center"
+            ctx.fillText(message, width / 2, height / 2 + 5)
+        }
     }
 
     // Función para lanzar un rayo y detectar paredes
-    const castRay = (x, y, angle) => {
+    const castRay = (x, y, angle, map) => {
         const rayDirX = Math.cos(angle)
         const rayDirY = Math.sin(angle)
         let distance = 0
@@ -334,9 +483,9 @@ export default function DoomGame() {
             const mapX = Math.floor(testX)
             const mapY = Math.floor(testY)
 
-            if (mapX >= 0 && mapX < MAP[0].length && mapY >= 0 && mapY < MAP.length) {
-                if (MAP[mapY][mapX] > 0) {
-                    wallType = MAP[mapY][mapX]
+            if (mapX >= 0 && mapX < map[0].length && mapY >= 0 && mapY < map.length) {
+                if (map[mapY][mapX] > 0) {
+                    wallType = map[mapY][mapX]
                     break
                 }
             } else {
@@ -380,10 +529,62 @@ export default function DoomGame() {
                 const y = (height - size) / 2
 
                 // Dibujar enemigo
-                ctx.fillStyle = "#FF0000"
                 ctx.globalAlpha = 1 - Math.min(distance / 10, 0.8)
-                ctx.fillRect(x, y, size, size)
+
+                // Diferentes tipos de enemigos
+                if (enemy.type === 0) {
+                    // Demonio rojo
+                    ctx.fillStyle = "#FF0000"
+                    ctx.fillRect(x, y, size, size)
+
+                    // Ojos
+                    ctx.fillStyle = "#FFFF00"
+                    ctx.fillRect(x + size * 0.2, y + size * 0.2, size * 0.15, size * 0.15)
+                    ctx.fillRect(x + size * 0.65, y + size * 0.2, size * 0.15, size * 0.15)
+
+                    // Boca
+                    ctx.fillStyle = "#000000"
+                    ctx.fillRect(x + size * 0.3, y + size * 0.6, size * 0.4, size * 0.2)
+                } else if (enemy.type === 1) {
+                    // Soldado
+                    ctx.fillStyle = "#00AA00"
+                    ctx.fillRect(x, y, size, size)
+
+                    // Casco
+                    ctx.fillStyle = "#555555"
+                    ctx.fillRect(x, y, size, size * 0.3)
+
+                    // Visor
+                    ctx.fillStyle = "#FF0000"
+                    ctx.fillRect(x + size * 0.3, y + size * 0.15, size * 0.4, size * 0.1)
+                } else {
+                    // Cacodemon
+                    ctx.fillStyle = "#AA00AA"
+                    ctx.beginPath()
+                    ctx.arc(x + size / 2, y + size / 2, size / 2, 0, Math.PI * 2)
+                    ctx.fill()
+
+                    // Ojo
+                    ctx.fillStyle = "#FF0000"
+                    ctx.beginPath()
+                    ctx.arc(x + size / 2, y + size / 3, size / 4, 0, Math.PI * 2)
+                    ctx.fill()
+
+                    // Pupila
+                    ctx.fillStyle = "#000000"
+                    ctx.beginPath()
+                    ctx.arc(x + size / 2, y + size / 3, size / 8, 0, Math.PI * 2)
+                    ctx.fill()
+                }
+
                 ctx.globalAlpha = 1.0
+
+                // Barra de salud
+                const healthPercent = enemy.health / (difficulty === "easy" ? 80 : difficulty === "hard" ? 120 : 100)
+                ctx.fillStyle = healthPercent > 0.6 ? "#00FF00" : healthPercent > 0.3 ? "#FFFF00" : "#FF0000"
+                ctx.fillRect(x, y - 10, size * healthPercent, 5)
+                ctx.strokeStyle = "#000"
+                ctx.strokeRect(x, y - 10, size, 5)
             }
         }
     }
@@ -396,8 +597,20 @@ export default function DoomGame() {
         const weaponY = height - weaponHeight
 
         // Dibujar pistola
+        // Ajustar posición vertical según si está disparando
+        const offsetY = weaponFrameRef.current === 1 ? -5 : 0
+
+        // Dibujar arma
         ctx.fillStyle = "#333"
-        ctx.fillRect(weaponX, weaponY, weaponWidth, weaponHeight / 2)
+        ctx.fillRect(weaponX, weaponY + offsetY, weaponWidth, weaponHeight / 2)
+
+        // Cañón
+        ctx.fillStyle = "#222"
+        ctx.fillRect(weaponX + weaponWidth / 2 - 5, weaponY + offsetY - 10, 10, 20)
+
+        // Detalles
+        ctx.fillStyle = "#444"
+        ctx.fillRect(weaponX + 10, weaponY + offsetY + 10, weaponWidth - 20, 10)
 
         // Si está disparando, dibujar destello
         if (weaponFrameRef.current === 1) {
@@ -405,6 +618,17 @@ export default function DoomGame() {
             ctx.beginPath()
             ctx.arc(width / 2, weaponY - 10, 10, 0, Math.PI * 2)
             ctx.fill()
+
+            // Rayos del destello
+            ctx.strokeStyle = "#FF0"
+            ctx.lineWidth = 2
+            ctx.beginPath()
+            for (let i = 0; i < 8; i++) {
+                const angle = (i * Math.PI) / 4
+                ctx.moveTo(width / 2, weaponY - 10)
+                ctx.lineTo(width / 2 + Math.cos(angle) * 15, weaponY - 10 + Math.sin(angle) * 15)
+            }
+            ctx.stroke()
         }
     }
 
@@ -417,9 +641,41 @@ export default function DoomGame() {
         // Texto
         ctx.font = "12px monospace"
         ctx.fillStyle = "#FFF"
-        ctx.fillText(`Salud: ${health}`, 20, height - 40)
+        ctx.fillText(`Salud: ${Math.floor(health)}`, 20, height - 40)
         ctx.fillText(`Munición: ${ammo}`, 20, height - 25)
         ctx.fillText(`Puntuación: ${score}`, 20, height - 10)
+
+        // Nivel y enemigos
+        ctx.fillStyle = "rgba(0, 0, 0, 0.7)"
+        ctx.fillRect(width - 160, height - 60, 150, 50)
+        ctx.fillStyle = "#FFF"
+        ctx.fillText(`Nivel: ${level}`, width - 150, height - 40)
+        ctx.fillText(`Enemigos: ${enemiesRef.current.length}`, width - 150, height - 25)
+        ctx.fillText(`Eliminados: ${enemiesKilled}`, width - 150, height - 10)
+    }
+
+    // Guardar puntuación alta
+    const saveHighScore = () => {
+        if (score > 0) {
+            const highScores = JSON.parse(localStorage.getItem("highScores") || "{}")
+            const gameHighScores = highScores.doom || []
+
+            // Añadir nueva puntuación
+            gameHighScores.push({
+                score,
+                date: new Date().toISOString(),
+                difficulty,
+                level,
+                enemiesKilled,
+            })
+
+            // Ordenar y limitar a 5 puntuaciones
+            gameHighScores.sort((a, b) => b.score - a.score)
+            highScores.doom = gameHighScores.slice(0, 5)
+
+            // Guardar en localStorage
+            localStorage.setItem("highScores", JSON.stringify(highScores))
+        }
     }
 
     // Eventos de teclado
@@ -445,80 +701,80 @@ export default function DoomGame() {
         }
     }, [ammo])
 
-    // Manejar controles desde el pad
-    const handleDirectionChange = (direction) => {
-        if (!direction) {
-            keysRef.current["ArrowUp"] = false
-            keysRef.current["ArrowDown"] = false
-            keysRef.current["ArrowLeft"] = false
-            keysRef.current["ArrowRight"] = false
-            keysRef.current["w"] = false
-            keysRef.current["s"] = false
-            keysRef.current["a"] = false
-            keysRef.current["d"] = false
-            return
-        }
+    // Añadir un useEffect para sincronizar el estado con las referencias
+    useEffect(() => {
+        // Esta función se ejecutará después de cada renderizado
+        // para asegurarse de que los estados estén sincronizados
+        const syncInterval = setInterval(() => {
+            if (!gameOver && !isPaused) {
+                // Actualizar el estado con los valores actuales de las referencias
+                setAmmo((prev) => Math.max(0, prev))
+                setEnemiesKilled((prev) => enemiesKilled)
+            }
+        }, 100) // Actualizar cada 100ms
 
-        // Establecer nueva dirección
-        switch (direction) {
-            case "up":
-                keysRef.current["ArrowUp"] = true
-                keysRef.current["w"] = true
-                break
-            case "down":
-                keysRef.current["ArrowDown"] = true
-                keysRef.current["s"] = true
-                break
-            case "left":
-                keysRef.current["ArrowLeft"] = true
-                keysRef.current["a"] = true
-                break
-            case "right":
-                keysRef.current["ArrowRight"] = true
-                keysRef.current["d"] = true
-                break
-        }
-    }
-
-    const handleButtonPress = (button) => {
-        if (button === "a") {
-            shoot()
-        } else if (button === "b") {
-            setIsPaused(!isPaused)
-        }
-    }
+        return () => clearInterval(syncInterval)
+    }, [gameOver, isPaused])
 
     const resetGame = () => {
         initGame()
         playSound("start")
     }
 
+    // Modificar el componente para mostrar correctamente los valores actuales
     return (
         <div className="relative w-full h-full flex flex-col items-center justify-center p-2">
             <div className="mb-2 flex justify-between w-full px-2">
-                <div className="text-xs">Salud: {health}</div>
-                <button onClick={() => setIsPaused(!isPaused)} className="text-xs bg-gray-700 px-2 py-1 rounded">
+                <div className="text-xs bg-gray-800 px-2 py-1 rounded-md shadow-inner border border-gray-700">
+                    Salud: {Math.floor(health)}
+                </div>
+                <button onClick={() => setIsPaused(!isPaused)} className="pause-button">
                     {isPaused ? "Reanudar" : "Pausa"}
                 </button>
-                <div className="text-xs">Munición: {ammo}</div>
+                <div className="text-xs bg-gray-800 px-2 py-1 rounded-md shadow-inner border border-gray-700">
+                    Munición: {ammo}
+                </div>
+            </div>
+
+            <div className="mb-2 flex justify-between w-full px-2">
+                <div className="text-xs bg-gray-800 px-2 py-1 rounded-md shadow-inner border border-gray-700">
+                    Nivel: {level}
+                </div>
+                <div className="text-xs bg-gray-800 px-2 py-1 rounded-md shadow-inner border border-gray-700">
+                    Enemigos: {enemiesRef.current ? enemiesRef.current.length : 0}
+                </div>
             </div>
 
             <DifficultySelector difficulty={difficulty} onChange={setDifficulty} gameId="doom" />
 
-            <canvas ref={canvasRef} width={320} height={240} className="border border-gray-700 bg-black" />
+            <canvas
+                ref={canvasRef}
+                width={320}
+                height={240}
+                className="border border-gray-700 bg-black shadow-lg rounded-md"
+            />
 
-            {/* Control Pad para dispositivos móviles */}
-            <ControlPad onDirectionChange={handleDirectionChange} onButtonPress={handleButtonPress} />
+            {/* Componente de puntuaciones altas */}
+            <HighScore gameId="doom" />
 
             {gameOver && (
-                <div className="absolute inset-0 bg-black/80 flex flex-col items-center justify-center">
-                    <h3 className="text-xl font-bold mb-2">Game Over</h3>
+                <div className="absolute inset-0 bg-black/80 flex flex-col items-center justify-center backdrop-blur-sm">
+                    <h3 className="text-xl font-bold mb-2 text-red-500">Game Over</h3>
                     <p className="mb-4">
-                        {enemiesRef.current.length === 0 ? "¡Victoria!" : "Has sido derrotado"}
+                        {enemiesRef.current && enemiesRef.current.length === 0 && level >= MAPS.length
+                            ? "¡Victoria!"
+                            : "Has sido derrotado"}
                         <br />
                         Puntuación: {score}
+                        <br />
+                        Nivel: {level}
+                        <br />
+                        Enemigos eliminados: {enemiesKilled}
                     </p>
-                    <button onClick={resetGame} className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded">
+                    <button
+                        onClick={resetGame}
+                        className="bg-gradient-to-r from-red-600 to-red-800 hover:from-red-500 hover:to-red-700 text-white px-4 py-2 rounded-md shadow-lg border border-red-700 transition-all duration-200"
+                    >
                         Jugar de nuevo
                     </button>
                 </div>
@@ -526,7 +782,7 @@ export default function DoomGame() {
 
             <div className="mt-2 text-xs text-center">
                 <p>WASD o flechas para moverte, Espacio para disparar</p>
-                <p>En móvil, usa el pad de control</p>
+                <p>Elimina a todos los enemigos para avanzar de nivel</p>
             </div>
         </div>
     )

@@ -2,7 +2,9 @@
 
 import { useEffect, useRef, useState } from "react"
 import { DifficultySelector } from "../difficulty-selector"
+import { HighScore } from "../high-score"
 import { useSound } from "../../contexts/sound-context"
+import "../pause-button.css"
 
 export default function SnakeGame() {
   const canvasRef = useRef(null)
@@ -136,6 +138,7 @@ export default function SnakeGame() {
       if (head.x < 0 || head.x >= width || head.y < 0 || head.y >= height) {
         setGameOver(true)
         playSound("gameOver")
+        saveHighScore()
         return
       }
 
@@ -144,6 +147,7 @@ export default function SnakeGame() {
         if (head.x === snake[i].x && head.y === snake[i].y) {
           setGameOver(true)
           playSound("gameOver")
+          saveHighScore()
           return
         }
       }
@@ -288,6 +292,28 @@ export default function SnakeGame() {
     }
   }, [gameOver, isPaused, difficulty, playSound])
 
+  // Guardar puntuación alta
+  const saveHighScore = () => {
+    if (score > 0) {
+      const highScores = JSON.parse(localStorage.getItem("highScores") || "{}")
+      const gameHighScores = highScores.snake || []
+
+      // Añadir nueva puntuación
+      gameHighScores.push({
+        score,
+        date: new Date().toISOString(),
+        difficulty,
+      })
+
+      // Ordenar y limitar a 5 puntuaciones
+      gameHighScores.sort((a, b) => b.score - a.score)
+      highScores.snake = gameHighScores.slice(0, 5)
+
+      // Guardar en localStorage
+      localStorage.setItem("highScores", JSON.stringify(highScores))
+    }
+  }
+
   const resetGame = () => {
     playSound("click")
     setGameOver(false)
@@ -305,7 +331,7 @@ export default function SnakeGame() {
       <div className="mb-2 flex justify-between w-full px-2">
         <div className="text-xs pixel-text bg-black/50 px-2 py-1 rounded border border-green-500">Score: {score}</div>
         <button onClick={handlePauseToggle} className="pause-button">
-          {isPaused ? "Resume" : "Pause"}
+          {isPaused ? "Reanudar" : "Pausa"}
         </button>
       </div>
 
@@ -315,6 +341,9 @@ export default function SnakeGame() {
         <canvas ref={canvasRef} width={320} height={320} className="border-4 border-[#0f380f] bg-[#9bbc0f]" />
         <div className="crt-effect absolute inset-0 pointer-events-none"></div>
       </div>
+
+      {/* Componente de puntuaciones altas */}
+      <HighScore gameId="snake" />
 
       {gameOver && (
         <div className="game-over-screen absolute inset-0 flex flex-col items-center justify-center">

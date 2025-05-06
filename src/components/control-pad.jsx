@@ -8,6 +8,12 @@ export function ControlPad({ onDirectionChange, onButtonPress }) {
     const { playSound } = useSound()
     const [activeDirection, setActiveDirection] = useState(null)
     const [activeButton, setActiveButton] = useState(null)
+    const [isTouchDevice, setIsTouchDevice] = useState(false)
+
+    // Detectar si es un dispositivo táctil
+    useEffect(() => {
+        setIsTouchDevice("ontouchstart" in window || navigator.maxTouchPoints > 0)
+    }, [])
 
     // Función para manejar pulsación de dirección
     const handleDirectionPress = (direction) => {
@@ -47,6 +53,30 @@ export function ControlPad({ onDirectionChange, onButtonPress }) {
             setActiveButton(null)
         }
     }, [])
+
+    // Prevenir el comportamiento por defecto para evitar desplazamiento en móviles
+    const preventDefaultTouch = (e) => {
+        e.preventDefault()
+    }
+
+    useEffect(() => {
+        // Añadir listener para prevenir comportamientos táctiles por defecto
+        const padContainer = document.querySelector(".control-pad-container")
+        if (padContainer) {
+            padContainer.addEventListener("touchmove", preventDefaultTouch, { passive: false })
+            padContainer.addEventListener("touchstart", preventDefaultTouch, { passive: false })
+
+            return () => {
+                padContainer.removeEventListener("touchmove", preventDefaultTouch)
+                padContainer.removeEventListener("touchstart", preventDefaultTouch)
+            }
+        }
+    }, [])
+
+    // Si no es un dispositivo táctil y no estamos forzando la visualización, no mostrar el pad
+    if (!isTouchDevice && !window.location.search.includes("showpad=true")) {
+        return null
+    }
 
     return (
         <div className="control-pad-container">

@@ -24,6 +24,16 @@ export default function ChessGame() {
     const [promotionPosition, setPromotionPosition] = useState(null)
     const [pendingBoard, setPendingBoard] = useState(null)
 
+    // Estado para rastrear si las piezas se han movido (para el enroque)
+    const [castlingState, setCastlingState] = useState({
+        whiteKingMoved: false,
+        whiteRookKingSideMoved: false,
+        whiteRookQueenSideMoved: false,
+        blackKingMoved: false,
+        blackRookKingSideMoved: false,
+        blackRookQueenSideMoved: false,
+    })
+
     // Inicializar el tablero
     useEffect(() => {
         resetGame()
@@ -308,11 +318,153 @@ export default function ChessGame() {
                 for (const move of kingMoves) {
                     addMove(row + move.r, col + move.c)
                 }
+
+                // Añadir movimientos de enroque
+                if (pieceColor === "w") {
+                    // Enroque corto (lado del rey) para blancas
+                    if (!castlingState.whiteKingMoved && !castlingState.whiteRookKingSideMoved) {
+                        if (!board[7][5] && !board[7][6] && board[7][7] === "wR") {
+                            // Verificar que el rey no esté en jaque y que no pase por casillas atacadas
+                            if (!isSquareAttacked(7, 4, "b") && !isSquareAttacked(7, 5, "b") && !isSquareAttacked(7, 6, "b")) {
+                                moves.push({ row: 7, col: 6, castling: "kingside" })
+                            }
+                        }
+                    }
+
+                    // Enroque largo (lado de la reina) para blancas
+                    if (!castlingState.whiteKingMoved && !castlingState.whiteRookQueenSideMoved) {
+                        if (!board[7][1] && !board[7][2] && !board[7][3] && board[7][0] === "wR") {
+                            // Verificar que el rey no esté en jaque y que no pase por casillas atacadas
+                            if (!isSquareAttacked(7, 4, "b") && !isSquareAttacked(7, 3, "b") && !isSquareAttacked(7, 2, "b")) {
+                                moves.push({ row: 7, col: 2, castling: "queenside" })
+                            }
+                        }
+                    }
+                } else {
+                    // Enroque corto (lado del rey) para negras
+                    if (!castlingState.blackKingMoved && !castlingState.blackRookKingSideMoved) {
+                        if (!board[0][5] && !board[0][6] && board[0][7] === "bR") {
+                            // Verificar que el rey no esté en jaque y que no pase por casillas atacadas
+                            if (!isSquareAttacked(0, 4, "w") && !isSquareAttacked(0, 5, "w") && !isSquareAttacked(0, 6, "w")) {
+                                moves.push({ row: 0, col: 6, castling: "kingside" })
+                            }
+                        }
+                    }
+
+                    // Enroque largo (lado de la reina) para negras
+                    if (!castlingState.blackKingMoved && !castlingState.blackRookQueenSideMoved) {
+                        if (!board[0][1] && !board[0][2] && !board[0][3] && board[0][0] === "bR") {
+                            // Verificar que el rey no esté en jaque y que no pase por casillas atacadas
+                            if (!isSquareAttacked(0, 4, "w") && !isSquareAttacked(0, 3, "w") && !isSquareAttacked(0, 2, "w")) {
+                                moves.push({ row: 0, col: 2, castling: "queenside" })
+                            }
+                        }
+                    }
+                }
                 break
         }
 
         return moves
     }
+
+    // Verificar si una casilla está siendo atacada por el color especificado
+    const isSquareAttacked = (row, col, attackingColor) => {
+        // Verificar ataques de peones
+        const pawnDirection = attackingColor === "w" ? -1 : 1
+        if (isValidPosition(row + pawnDirection, col - 1) && board[row + pawnDirection][col - 1] === `${attackingColor}P`) {
+            return true
+        }
+        if (isValidPosition(row + pawnDirection, col + 1) && board[row + pawnDirection][col + 1] === `${attackingColor}P`) {
+            return true
+        }
+
+        // Verificar ataques de caballos
+        const knightMoves = [
+            { r: -2, c: -1 },
+            { r: -2, c: 1 },
+            { r: -1, c: -2 },
+            { r: -1, c: 2 },
+            { r: 1, c: -2 },
+            { r: 1, c: 2 },
+            { r: 2, c: -1 },
+            { r: 2, c: 1 },
+        ]
+        for (const move of knightMoves) {
+            const r = row + move.r
+            const c = col + move.c
+            if (isValidPosition(r, c) && board[r][c] === `${attackingColor}N`) {
+                return true
+            }
+        }
+
+        // Verificar ataques en línea recta (torre y reina)
+        const directions = [
+            { r: 1, c: 0 },
+            { r: -1, c: 0 },
+            { r: 0, c: 1 },
+            { r: 0, c: -1 },
+        ]
+        for (const dir of directions) {
+            let r = row + dir.r
+            let c = col + dir.c
+            while (isValidPosition(r, c)) {
+                if (board[r][c]) {
+                    if (board[r][c] === `${attackingColor}R` || board[r][c] === `${attackingColor}Q`) {
+                        return true
+                    }
+                    break
+                }
+                r += dir.r
+                c += dir.c
+            }
+        }
+
+        // Verificar ataques en diagonal (alfil y reina)
+        const diagonals = [
+            { r: 1, c: 1 },
+            { r: 1, c: -1 },
+            { r: -1, c: 1 },
+            { r: -1, c: -1 },
+        ]
+        for (const dir of diagonals) {
+            let r = row + dir.r
+            let c = col + dir.c
+            while (isValidPosition(r, c)) {
+                if (board[r][c]) {
+                    if (board[r][c] === `${attackingColor}B` || board[r][c] === `${attackingColor}Q`) {
+                        return true
+                    }
+                    break
+                }
+                r += dir.r
+                c += dir.c
+            }
+        }
+
+        // Verificar ataques del rey
+        const kingMoves = [
+            { r: -1, c: -1 },
+            { r: -1, c: 0 },
+            { r: -1, c: 1 },
+            { r: 0, c: -1 },
+            { r: 0, c: 1 },
+            { r: 1, c: -1 },
+            { r: 1, c: 0 },
+            { r: 1, c: 1 },
+        ]
+        for (const move of kingMoves) {
+            const r = row + move.r
+            const c = col + move.c
+            if (isValidPosition(r, c) && board[r][c] === `${attackingColor}K`) {
+                return true
+            }
+        }
+
+        return false
+    }
+
+    // Función auxiliar para verificar si una posición es válida
+    const isValidPosition = (r, c) => r >= 0 && r < 8 && c >= 0 && c < 8
 
     // Manejar clic en el tablero
     const handleClick = (e) => {
@@ -339,9 +491,63 @@ export default function ChessGame() {
                 const newBoard = JSON.parse(JSON.stringify(board))
                 const piece = newBoard[selectedPiece.row][selectedPiece.col]
 
-                // Mover la pieza
-                newBoard[row][col] = piece
-                newBoard[selectedPiece.row][selectedPiece.col] = ""
+                // Obtener el movimiento específico (para enroque)
+                const move = validMoves.find((m) => m.row === row && m.col === col)
+
+                // Actualizar estado de enroque si se mueve el rey o las torres
+                const newCastlingState = { ...castlingState }
+
+                if (piece === "wK") {
+                    newCastlingState.whiteKingMoved = true
+                } else if (piece === "bK") {
+                    newCastlingState.blackKingMoved = true
+                } else if (piece === "wR") {
+                    if (selectedPiece.row === 7 && selectedPiece.col === 0) {
+                        newCastlingState.whiteRookQueenSideMoved = true
+                    } else if (selectedPiece.row === 7 && selectedPiece.col === 7) {
+                        newCastlingState.whiteRookKingSideMoved = true
+                    }
+                } else if (piece === "bR") {
+                    if (selectedPiece.row === 0 && selectedPiece.col === 0) {
+                        newCastlingState.blackRookQueenSideMoved = true
+                    } else if (selectedPiece.row === 0 && selectedPiece.col === 7) {
+                        newCastlingState.blackRookKingSideMoved = true
+                    }
+                }
+
+                setCastlingState(newCastlingState)
+
+                // Manejar enroque
+                if (move && move.castling) {
+                    // Mover el rey
+                    newBoard[row][col] = piece
+                    newBoard[selectedPiece.row][selectedPiece.col] = ""
+
+                    // Mover la torre correspondiente
+                    if (move.castling === "kingside") {
+                        if (piece === "wK") {
+                            newBoard[7][5] = "wR" // Mover torre blanca del lado del rey
+                            newBoard[7][7] = ""
+                        } else {
+                            newBoard[0][5] = "bR" // Mover torre negra del lado del rey
+                            newBoard[0][7] = ""
+                        }
+                        playSound("select")
+                    } else if (move.castling === "queenside") {
+                        if (piece === "wK") {
+                            newBoard[7][3] = "wR" // Mover torre blanca del lado de la reina
+                            newBoard[7][0] = ""
+                        } else {
+                            newBoard[0][3] = "bR" // Mover torre negra del lado de la reina
+                            newBoard[0][0] = ""
+                        }
+                        playSound("select")
+                    }
+                } else {
+                    // Movimiento normal
+                    newBoard[row][col] = piece
+                    newBoard[selectedPiece.row][selectedPiece.col] = ""
+                }
 
                 // Verificar coronación de peones
                 const isPromotion = handlePawnPromotion(newBoard, row, col, piece)
@@ -463,24 +669,87 @@ export default function ChessGame() {
 
     // Hacer movimiento de la IA
     const makeAIMove = (currentBoard) => {
-        // Implementación simple de IA: movimiento aleatorio
+        // Implementación mejorada de IA para dificultad difícil
         const possibleMoves = []
 
         // Recopilar todas las piezas negras y sus movimientos posibles
         for (let row = 0; row < 8; row++) {
             for (let col = 0; col < 8; col++) {
                 if (currentBoard[row][col] && currentBoard[row][col].charAt(0) === "b") {
+                    const piece = currentBoard[row][col]
                     const moves = getValidMoves(row, col)
 
                     for (const move of moves) {
+                        // Crear una copia del tablero para simular el movimiento
+                        const newBoard = JSON.parse(JSON.stringify(currentBoard))
+                        newBoard[move.row][move.col] = piece
+                        newBoard[row][col] = ""
+
+                        // Evaluar el movimiento
+                        let value = 0
+
+                        // Valor de la captura
+                        if (currentBoard[move.row][move.col]) {
+                            value += getPieceValue(currentBoard[move.row][move.col]) * 10
+                        }
+
+                        // En dificultad difícil, evaluar la posición resultante
+                        if (difficulty === "hard") {
+                            // Evaluar control del centro
+                            if ((move.row === 3 || move.row === 4) && (move.col === 3 || move.col === 4)) {
+                                value += 3
+                            }
+
+                            // Evaluar desarrollo de piezas (mover piezas de su posición inicial)
+                            if (piece.charAt(1) !== "P" && (row === 0 || row === 7)) {
+                                value += 2
+                            }
+
+                            // Evaluar protección del rey
+                            if (piece.charAt(1) === "K") {
+                                // Penalizar mover el rey al centro en apertura/medio juego
+                                if ((move.row === 3 || move.row === 4) && (move.col === 3 || move.col === 4)) {
+                                    value -= 5
+                                }
+                            }
+
+                            // Evaluar avance de peones
+                            if (piece.charAt(1) === "P") {
+                                // Valorar avance de peones hacia promoción
+                                value += (7 - move.row) / 2
+
+                                // Valorar peones pasados (que pueden llegar a promocionar)
+                                let isPassed = true
+                                for (let r = move.row - 1; r >= 0; r--) {
+                                    if (currentBoard[r][move.col] && currentBoard[r][move.col].charAt(1) === "P") {
+                                        isPassed = false
+                                        break
+                                    }
+                                }
+                                if (isPassed) value += 5
+                            }
+
+                            // Evaluar ataques
+                            for (let r = 0; r < 8; r++) {
+                                for (let c = 0; c < 8; c++) {
+                                    if (currentBoard[r][c] && currentBoard[r][c].charAt(0) === "w") {
+                                        // Verificar si la pieza blanca está atacada después del movimiento
+                                        if (isSquareAttacked(r, c, "b", newBoard)) {
+                                            value += getPieceValue(currentBoard[r][c]) / 2
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
                         possibleMoves.push({
                             fromRow: row,
                             fromCol: col,
                             toRow: move.row,
                             toCol: move.col,
-                            piece: currentBoard[row][col],
-                            // Evaluar el valor de la captura
-                            value: currentBoard[move.row][move.col] ? getPieceValue(currentBoard[move.row][move.col]) : 0,
+                            piece: piece,
+                            value: value,
+                            castling: move.castling,
                         })
                     }
                 }
@@ -504,8 +773,17 @@ export default function ChessGame() {
             // En fácil, movimiento aleatorio
             selectedMove = possibleMoves[Math.floor(Math.random() * possibleMoves.length)]
         } else if (difficulty === "hard") {
-            // En difícil, siempre el mejor movimiento
-            selectedMove = possibleMoves[0]
+            // En difícil, elegir entre los 3 mejores movimientos con mayor probabilidad para el mejor
+            const randomValue = Math.random()
+            if (randomValue < 0.7 && possibleMoves.length > 0) {
+                selectedMove = possibleMoves[0] // 70% de probabilidad para el mejor movimiento
+            } else if (randomValue < 0.9 && possibleMoves.length > 1) {
+                selectedMove = possibleMoves[1] // 20% para el segundo mejor
+            } else if (possibleMoves.length > 2) {
+                selectedMove = possibleMoves[2] // 10% para el tercer mejor
+            } else {
+                selectedMove = possibleMoves[0]
+            }
         } else {
             // En normal, 70% de probabilidad de elegir uno de los 3 mejores movimientos
             if (Math.random() < 0.7 && possibleMoves.length >= 3) {
@@ -517,8 +795,43 @@ export default function ChessGame() {
 
         // Realizar el movimiento
         const newBoard = JSON.parse(JSON.stringify(currentBoard))
-        newBoard[selectedMove.toRow][selectedMove.toCol] = selectedMove.piece
-        newBoard[selectedMove.fromRow][selectedMove.fromCol] = ""
+
+        // Actualizar estado de enroque si se mueve el rey o las torres
+        const newCastlingState = { ...castlingState }
+
+        if (selectedMove.piece === "bK") {
+            newCastlingState.blackKingMoved = true
+        } else if (selectedMove.piece === "bR") {
+            if (selectedMove.fromRow === 0 && selectedMove.fromCol === 0) {
+                newCastlingState.blackRookQueenSideMoved = true
+            } else if (selectedMove.fromRow === 0 && selectedMove.fromCol === 7) {
+                newCastlingState.blackRookKingSideMoved = true
+            }
+        }
+
+        setCastlingState(newCastlingState)
+
+        // Manejar enroque
+        if (selectedMove.castling) {
+            // Mover el rey
+            newBoard[selectedMove.toRow][selectedMove.toCol] = selectedMove.piece
+            newBoard[selectedMove.fromRow][selectedMove.fromCol] = ""
+
+            // Mover la torre correspondiente
+            if (selectedMove.castling === "kingside") {
+                newBoard[0][5] = "bR" // Mover torre negra del lado del rey
+                newBoard[0][7] = ""
+                playSound("select")
+            } else if (selectedMove.castling === "queenside") {
+                newBoard[0][3] = "bR" // Mover torre negra del lado de la reina
+                newBoard[0][0] = ""
+                playSound("select")
+            }
+        } else {
+            // Movimiento normal
+            newBoard[selectedMove.toRow][selectedMove.toCol] = selectedMove.piece
+            newBoard[selectedMove.fromRow][selectedMove.fromCol] = ""
+        }
 
         // Para la IA, promocionar automáticamente a reina
         const pieceColor = selectedMove.piece.charAt(0)
@@ -586,6 +899,14 @@ export default function ChessGame() {
         setValidMoves([])
         setTurn("white")
         setWinner(null)
+        setCastlingState({
+            whiteKingMoved: false,
+            whiteRookKingSideMoved: false,
+            whiteRookQueenSideMoved: false,
+            blackKingMoved: false,
+            blackRookKingSideMoved: false,
+            blackRookQueenSideMoved: false,
+        })
         playSound("start")
     }
 
@@ -626,6 +947,7 @@ export default function ChessGame() {
             <div className="mt-2 text-xs text-center">
                 <p>Haz clic en una pieza para seleccionarla</p>
                 <p>Los círculos azules muestran los movimientos válidos</p>
+                <p>Puedes hacer enroque moviendo el rey dos casillas</p>
             </div>
             {showPromotionDialog && (
                 <PromotionDialog

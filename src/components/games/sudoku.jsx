@@ -16,6 +16,22 @@ export default function SudokuGame() {
     const [solution, setSolution] = useState([])
     const [originalBoard, setOriginalBoard] = useState([])
     const { playSound } = useSound()
+    const [showNumpad, setShowNumpad] = useState(false)
+    const [isMobile, setIsMobile] = useState(false)
+
+    // Detectar si es un dispositivo móvil
+    useEffect(() => {
+        const checkMobile = () => {
+            setIsMobile(window.innerWidth <= 768 || "ontouchstart" in window || navigator.maxTouchPoints > 0)
+        }
+
+        checkMobile()
+        window.addEventListener("resize", checkMobile)
+
+        return () => {
+            window.removeEventListener("resize", checkMobile)
+        }
+    }, [])
 
     // Inicializar el tablero
     useEffect(() => {
@@ -62,6 +78,7 @@ export default function SudokuGame() {
         setTimeElapsed(0)
         setGameOver(false)
         setSelectedCell(null)
+        setShowNumpad(false)
     }
 
     // Crear un tablero resuelto
@@ -254,6 +271,9 @@ export default function SudokuGame() {
         }
 
         setSelectedCell({ row, col })
+        if (isMobile) {
+            setShowNumpad(true) // Mostrar teclado numérico en móviles
+        }
         playSound("hover")
     }
 
@@ -268,30 +288,7 @@ export default function SudokuGame() {
 
         if (e.key >= "1" && e.key <= "9") {
             const num = Number.parseInt(e.key)
-            const newBoard = [...board]
-
-            // Verificar si el número es correcto
-            if (num === solution[row][col]) {
-                newBoard[row][col] = num
-                setBoard(newBoard)
-                playSound("success")
-
-                // Verificar si el tablero está completo
-                if (isBoardComplete(newBoard)) {
-                    setGameOver(true)
-                    playSound("success")
-                }
-            } else {
-                // Número incorrecto
-                setMistakes(mistakes + 1)
-                playSound("click")
-
-                // Game over después de 3 errores
-                if (mistakes + 1 >= 3) {
-                    setGameOver(true)
-                    playSound("gameOver")
-                }
-            }
+            handleNumberInput(num)
         } else if (e.key === "Backspace" || e.key === "Delete") {
             // Borrar número
             const newBoard = [...board]
@@ -299,6 +296,48 @@ export default function SudokuGame() {
             setBoard(newBoard)
             playSound("click")
         }
+    }
+
+    // Manejar entrada de número (desde teclado físico o virtual)
+    const handleNumberInput = (num) => {
+        if (!selectedCell) return
+
+        const { row, col } = selectedCell
+        const newBoard = [...board]
+
+        // Verificar si el número es correcto
+        if (num === solution[row][col]) {
+            newBoard[row][col] = num
+            setBoard(newBoard)
+            playSound("success")
+
+            // Verificar si el tablero está completo
+            if (isBoardComplete(newBoard)) {
+                setGameOver(true)
+                playSound("success")
+            }
+        } else {
+            // Número incorrecto
+            setMistakes(mistakes + 1)
+            playSound("click")
+
+            // Game over después de 3 errores
+            if (mistakes + 1 >= 3) {
+                setGameOver(true)
+                playSound("gameOver")
+            }
+        }
+    }
+
+    // Borrar número de la celda seleccionada
+    const handleClearCell = () => {
+        if (!selectedCell) return
+
+        const { row, col } = selectedCell
+        const newBoard = [...board]
+        newBoard[row][col] = 0
+        setBoard(newBoard)
+        playSound("click")
     }
 
     // Verificar si el tablero está completo
@@ -360,6 +399,27 @@ export default function SudokuGame() {
                 onClick={handleCanvasClick}
             />
 
+            {/* Teclado numérico para dispositivos móviles */}
+            {showNumpad && selectedCell && (
+                <div className="mt-4 grid grid-cols-3 gap-2 w-full max-w-xs">
+                    {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((num) => (
+                        <button
+                            key={num}
+                            onClick={() => handleNumberInput(num)}
+                            className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-4 rounded"
+                        >
+                            {num}
+                        </button>
+                    ))}
+                    <button
+                        onClick={handleClearCell}
+                        className="col-span-3 bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-4 rounded"
+                    >
+                        Borrar
+                    </button>
+                </div>
+            )}
+
             {gameOver && (
                 <div className="absolute inset-0 bg-black/80 flex flex-col items-center justify-center">
                     <h3 className="text-xl font-bold mb-2">{isBoardComplete(board) ? "¡Felicidades!" : "Game Over"}</h3>
@@ -374,8 +434,7 @@ export default function SudokuGame() {
 
             <div className="mt-2 text-xs text-center">
                 <p>Haz clic para seleccionar una celda</p>
-                <p>Usa los números del teclado (1-9) para rellenar</p>
-                <p>Backspace o Delete para borrar</p>
+                <p>Usa los números del teclado o el teclado en pantalla</p>
             </div>
         </div>
     )

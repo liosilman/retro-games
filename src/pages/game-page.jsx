@@ -14,6 +14,7 @@ import SpaceInvaders from "../components/games/space-invaders"
 import Chess from "../components/games/chess"
 import Doom from "../components/games/doom"
 import Sudoku from "../components/games/sudoku"
+import Asteroids from "../components/games/asteroids"
 import { useSound } from "../contexts/sound-context"
 import "./game-page.css"
 import { FullscreenToggle } from "../components/fullscreen-toggle"
@@ -54,6 +55,8 @@ export default function GamePage() {
                 return <Doom />
             case "sudoku":
                 return <Sudoku />
+            case "asteroids":
+                return <Asteroids />
             default:
                 return <div className="game-not-available">Juego no disponible</div>
         }

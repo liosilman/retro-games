@@ -5,6 +5,10 @@
     max-width: 400px;
     margin: 1rem auto;
     user-select: none;
+    touch-action: none;
+    /* Prevenir comportamientos táctiles por defecto */
+    position: relative;
+    z-index: 100;
 }
 
 /* Estilos para el D-Pad */
@@ -12,13 +16,16 @@
     position: relative;
     width: 120px;
     height: 120px;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 50%;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5), inset 0 0 5px rgba(255, 255, 255, 0.2);
 }
 
 .d-pad-button {
     position: absolute;
     width: 40px;
     height: 40px;
-    background-color: #333;
+    background: linear-gradient(to bottom, #444, #222);
     border: 2px solid #555;
     border-radius: 8px;
     color: #fff;
@@ -29,11 +36,12 @@
     cursor: pointer;
     transition: all 0.1s ease;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+    z-index: 2;
 }
 
 .d-pad-button:active,
 .d-pad-button.active {
-    background-color: #555;
+    background: linear-gradient(to bottom, #666, #444);
     transform: scale(0.95);
     box-shadow: 0 2px 3px rgba(0, 0, 0, 0.3);
 }
@@ -88,6 +96,23 @@
     cursor: pointer;
     transition: all 0.1s ease;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    position: relative;
+    overflow: hidden;
+}
+
+.action-button:after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg,
+            rgba(255, 255, 255, 0.2) 0%,
+            rgba(255, 255, 255, 0) 50%,
+            rgba(0, 0, 0, 0.1) 50%,
+            rgba(0, 0, 0, 0.2) 100%);
+    border-radius: 50%;
 }
 
 .action-button:active,
@@ -97,11 +122,11 @@
 }
 
 .action-a {
-    background-color: #e53e3e;
+    background: linear-gradient(to bottom, #ff5555, #e53e3e);
 }
 
 .action-b {
-    background-color: #3182ce;
+    background: linear-gradient(to bottom, #3b9ae8, #3182ce);
 }
 
 /* Estilos para dispositivos móviles */
@@ -132,12 +157,5 @@
     .action-button {
         width: 45px;
         height: 45px;
-    }
-}
-
-/* Solo mostrar en dispositivos móviles o táctiles */
-@media (hover: hover) and (pointer: fine) {
-    .control-pad-container {
-        display: none;
     }
 }
