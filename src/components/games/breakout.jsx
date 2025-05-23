@@ -4,7 +4,6 @@ import { useEffect, useRef, useState } from "react"
 import { DifficultySelector } from "../difficulty-selector"
 import { HighScore } from "../high-score"
 import { useSound } from "../../contexts/sound-context"
-import { ControlPad } from "../control-pad"
 import "../pause-button.css"
 
 export default function BreakoutGame() {
@@ -18,7 +17,6 @@ export default function BreakoutGame() {
     const paddleXRef = useRef(0)
     const { playSound } = useSound()
 
-    // Detectar si es un dispositivo táctil
     useEffect(() => {
         const checkTouchDevice = () => {
             setIsTouchDevice("ontouchstart" in window || navigator.maxTouchPoints > 0 || window.innerWidth <= 768)
@@ -42,7 +40,6 @@ export default function BreakoutGame() {
         const width = canvas.width
         const height = canvas.height
 
-        // Ajustar parámetros según la dificultad
         let ballSpeed
         let paddleWidth
         let initialLives
@@ -61,7 +58,7 @@ export default function BreakoutGame() {
                 initialLives = 2
                 scoreMultiplier = 1.5
                 break
-            default: // normal
+            default:
                 ballSpeed = 4
                 paddleWidth = 75
                 initialLives = 3
@@ -69,7 +66,6 @@ export default function BreakoutGame() {
                 break
         }
 
-        // Game objects
         const ballRadius = 8
         const paddleHeight = 10
 
@@ -94,7 +90,6 @@ export default function BreakoutGame() {
         let currentLives = initialLives
         setLives(initialLives)
 
-        // Create bricks
         const bricks = []
         const colors = ["#FF0000", "#FF7F00", "#FFFF00", "#00FF00", "#0000FF"]
 
@@ -168,7 +163,6 @@ export default function BreakoutGame() {
                             setScore(currentScore)
                             playSound("click")
 
-                            // Check if all bricks are gone
                             let allBroken = true
                             for (let c = 0; c < brickColumnCount; c++) {
                                 for (let r = 0; r < brickRowCount; r++) {
@@ -202,7 +196,6 @@ export default function BreakoutGame() {
             drawLives()
             collisionDetection()
 
-            // Ball collision with walls
             if (x + dx > width - ballRadius || x + dx < ballRadius) {
                 dx = -dx
                 playSound("click")
@@ -213,15 +206,11 @@ export default function BreakoutGame() {
                 playSound("click")
             } else if (y + dy > height - ballRadius - paddleHeight) {
                 if (x > paddleX && x < paddleX + paddleWidth) {
-                    // Ball hits paddle
                     dy = -dy
-
-                    // Adjust angle based on where ball hits paddle
                     const hitPos = (x - (paddleX + paddleWidth / 2)) / (paddleWidth / 2)
                     dx = hitPos * 5
                     playSound("click")
                 } else if (y + dy > height - ballRadius) {
-                    // Ball hits bottom
                     currentLives--
                     setLives(currentLives)
                     playSound("back")
@@ -231,7 +220,6 @@ export default function BreakoutGame() {
                         playSound("gameOver")
                         saveHighScore(currentScore, 0)
                     } else {
-                        // Reset ball and paddle
                         x = width / 2
                         y = height - 30
                         dx = ballSpeed * (Math.random() > 0.5 ? 1 : -1)
@@ -242,7 +230,6 @@ export default function BreakoutGame() {
                 }
             }
 
-            // Move paddle
             if (rightPressed && paddleX < width - paddleWidth) {
                 paddleX += 7
                 paddleXRef.current = paddleX
@@ -251,7 +238,6 @@ export default function BreakoutGame() {
                 paddleXRef.current = paddleX
             }
 
-            // Move ball
             x += dx
             y += dy
 
@@ -280,7 +266,6 @@ export default function BreakoutGame() {
                 paddleX = relativeX - paddleWidth / 2
                 paddleXRef.current = paddleX
 
-                // Keep paddle within bounds
                 if (paddleX < 0) {
                     paddleX = 0
                     paddleXRef.current = 0
@@ -298,7 +283,6 @@ export default function BreakoutGame() {
                 paddleX = relativeX - paddleWidth / 2
                 paddleXRef.current = paddleX
 
-                // Keep paddle within bounds
                 if (paddleX < 0) {
                     paddleX = 0
                     paddleXRef.current = 0
@@ -325,12 +309,10 @@ export default function BreakoutGame() {
         }
     }, [gameOver, isPaused, difficulty, playSound])
 
-    // Guardar puntuación alta
     const saveHighScore = (finalScore, remainingLives) => {
         const highScores = JSON.parse(localStorage.getItem("highScores") || "{}")
         const gameHighScores = highScores.breakout || []
 
-        // Añadir nueva puntuación
         gameHighScores.push({
             score: finalScore,
             lives: remainingLives,
@@ -338,11 +320,9 @@ export default function BreakoutGame() {
             difficulty,
         })
 
-        // Ordenar y limitar a 5 puntuaciones
         gameHighScores.sort((a, b) => b.score - a.score)
         highScores.breakout = gameHighScores.slice(0, 5)
 
-        // Guardar en localStorage
         localStorage.setItem("highScores", JSON.stringify(highScores))
     }
 
@@ -351,46 +331,6 @@ export default function BreakoutGame() {
         setScore(0)
         setIsPaused(false)
         playSound("start")
-    }
-
-    // Manejar controles desde el pad
-    const handleDirectionChange = (direction) => {
-        if (gameOver || isPaused) return
-
-        const canvas = canvasRef.current
-        if (!canvas) return
-
-        const width = canvas.width
-        const paddleWidth = difficulty === "easy" ? 85 : difficulty === "hard" ? 65 : 75
-        let newX = paddleXRef.current
-
-        if (direction === "left") {
-            newX -= 15
-        } else if (direction === "right") {
-            newX += 15
-        }
-
-        // Keep paddle within bounds
-        if (newX < 0) {
-            newX = 0
-        } else if (newX > width - paddleWidth) {
-            newX = width - paddleWidth
-        }
-
-        paddleXRef.current = newX
-    }
-
-    const handleButtonPress = (button) => {
-        if (gameOver) {
-            if (button === "a") {
-                resetGame()
-            }
-            return
-        }
-
-        if (button === "b") {
-            setIsPaused(!isPaused)
-        }
     }
 
     return (
@@ -411,10 +351,6 @@ export default function BreakoutGame() {
 
             <canvas ref={canvasRef} width={400} height={320} className="border border-gray-700 bg-black" />
 
-            {/* Control Pad para dispositivos móviles */}
-            {isTouchDevice && <ControlPad onDirectionChange={handleDirectionChange} onButtonPress={handleButtonPress} />}
-
-            {/* Componente de puntuaciones altas */}
             <HighScore gameId="breakout" />
 
             {gameOver && (
@@ -441,7 +377,6 @@ export default function BreakoutGame() {
             <div className="mt-2 text-xs text-center">
                 <p>Mueve el ratón o desliza para controlar la paleta</p>
                 <p>Destruye todos los bloques para ganar</p>
-                {isTouchDevice && <p className="text-gray-400 text-[10px] mt-1">Usa el pad para mover izquierda y derecha</p>}
             </div>
         </div>
     )

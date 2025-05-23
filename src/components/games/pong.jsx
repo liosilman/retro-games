@@ -4,7 +4,6 @@ import { useEffect, useRef, useState } from "react"
 import { DifficultySelector } from "../difficulty-selector"
 import { HighScore } from "../high-score"
 import { useSound } from "../../contexts/sound-context"
-import { ControlPad } from "../control-pad"
 import "../pause-button.css"
 
 export default function PongGame() {
@@ -15,22 +14,7 @@ export default function PongGame() {
     const [difficulty, setDifficulty] = useState("normal")
     const [winner, setWinner] = useState(null)
     const { playSound } = useSound()
-    const [isTouchDevice, setIsTouchDevice] = useState(false)
     const paddleYRef = useRef(0)
-
-    // Detectar si es un dispositivo táctil
-    useEffect(() => {
-        const checkTouchDevice = () => {
-            setIsTouchDevice("ontouchstart" in window || navigator.maxTouchPoints > 0 || window.innerWidth <= 768)
-        }
-
-        checkTouchDevice()
-        window.addEventListener("resize", checkTouchDevice)
-
-        return () => {
-            window.removeEventListener("resize", checkTouchDevice)
-        }
-    }, [])
 
     useEffect(() => {
         const canvas = canvasRef.current
@@ -42,7 +26,6 @@ export default function PongGame() {
         const width = canvas.width
         const height = canvas.height
 
-        // Ajustar parámetros según la dificultad
         let ballSpeed
         let cpuSpeed
         let cpuReactionDistance
@@ -51,21 +34,20 @@ export default function PongGame() {
             case "easy":
                 ballSpeed = 4
                 cpuSpeed = 2.5
-                cpuReactionDistance = 60 // CPU reacciona más tarde
+                cpuReactionDistance = 60
                 break
             case "hard":
                 ballSpeed = 7
                 cpuSpeed = 5.5
-                cpuReactionDistance = 20 // CPU reacciona más rápido
+                cpuReactionDistance = 20
                 break
-            default: // normal
+            default:
                 ballSpeed = 5
                 cpuSpeed = 4
                 cpuReactionDistance = 35
                 break
         }
 
-        // Game objects
         const paddleWidth = 10
         const paddleHeight = 60
         const ballSize = 8
@@ -80,9 +62,6 @@ export default function PongGame() {
         let playerScore = 0
         let cpuScore = 0
         let gameLoopId
-
-        // For touch controls
-        let touchY = 0
 
         const drawRect = (x, y, w, h, color) => {
             ctx.fillStyle = color
@@ -111,11 +90,9 @@ export default function PongGame() {
         }
 
         const update = () => {
-            // Move the ball
             ballX += ballSpeedX
             ballY += ballSpeedY
 
-            // CPU AI - ajustado por dificultad
             const cpuCenter = cpuY + paddleHeight / 2
             if (cpuCenter < ballY - cpuReactionDistance) {
                 cpuY += cpuSpeed
@@ -123,36 +100,28 @@ export default function PongGame() {
                 cpuY -= cpuSpeed
             }
 
-            // Ball collision with top and bottom
             if (ballY < 0 || ballY > height) {
                 ballSpeedY = -ballSpeedY
                 playSound("click")
             }
 
-            // Determine which paddle to check
             const paddle =
                 ballX < width / 2
                     ? { x: 20, y: playerY, width: paddleWidth, height: paddleHeight }
                     : { x: width - 20 - paddleWidth, y: cpuY, width: paddleWidth, height: paddleHeight }
 
-            // Ball collision with paddles
             if (
                 ballX - ballSize < paddle.x + paddle.width &&
                 ballX + ballSize > paddle.x &&
                 ballY - ballSize < paddle.y + paddle.height &&
                 ballY + ballSize > paddle.y
             ) {
-                // Reverse ball direction
                 ballSpeedX = -ballSpeedX
-
-                // Adjust ball angle based on where it hit the paddle
                 const hitPos = (ballY - (paddle.y + paddle.height / 2)) / (paddle.height / 2)
                 ballSpeedY = hitPos * 5
-
                 playSound("click")
             }
 
-            // Ball out of bounds
             if (ballX < 0) {
                 cpuScore++
                 setScore({ player: playerScore, cpu: cpuScore })
@@ -186,29 +155,18 @@ export default function PongGame() {
         }
 
         const draw = () => {
-            // Clear canvas
             drawRect(0, 0, width, height, "black")
-
-            // Draw net
             drawNet()
-
-            // Draw paddles
             drawRect(20, playerY, paddleWidth, paddleHeight, "white")
             drawRect(width - 20 - paddleWidth, cpuY, paddleWidth, paddleHeight, "white")
-
-            // Draw ball
             drawCircle(ballX, ballY, ballSize, "white")
-
-            // Draw score
             drawScore()
         }
 
         const gameLoop = () => {
             if (gameOver || isPaused) return
-
             update()
             draw()
-
             gameLoopId = requestAnimationFrame(gameLoop)
         }
 
@@ -218,30 +176,24 @@ export default function PongGame() {
             playerY = mouseY - paddleHeight / 2
             paddleYRef.current = playerY
 
-            // Keep paddle within bounds
             if (playerY < 0) {
                 playerY = 0
-                paddleYRef.current = 0
             } else if (playerY > height - paddleHeight) {
                 playerY = height - paddleHeight
-                paddleYRef.current = height - paddleHeight
             }
         }
 
         const handleTouchMove = (e) => {
             e.preventDefault()
             const rect = canvas.getBoundingClientRect()
-            touchY = e.touches[0].clientY - rect.top
+            const touchY = e.touches[0].clientY - rect.top
             playerY = touchY - paddleHeight / 2
             paddleYRef.current = playerY
 
-            // Keep paddle within bounds
             if (playerY < 0) {
                 playerY = 0
-                paddleYRef.current = 0
             } else if (playerY > height - paddleHeight) {
                 playerY = height - paddleHeight
-                paddleYRef.current = height - paddleHeight
             }
         }
 
@@ -257,24 +209,17 @@ export default function PongGame() {
         }
     }, [gameOver, isPaused, difficulty, playSound])
 
-    // Guardar puntuación alta
     const saveHighScore = (playerScore) => {
         if (playerScore > 0) {
             const highScores = JSON.parse(localStorage.getItem("highScores") || "{}")
             const gameHighScores = highScores.pong || []
-
-            // Añadir nueva puntuación
             gameHighScores.push({
                 score: playerScore,
                 date: new Date().toISOString(),
                 difficulty,
             })
-
-            // Ordenar y limitar a 5 puntuaciones
             gameHighScores.sort((a, b) => b.score - a.score)
             highScores.pong = gameHighScores.slice(0, 5)
-
-            // Guardar en localStorage
             localStorage.setItem("highScores", JSON.stringify(highScores))
         }
     }
@@ -285,46 +230,6 @@ export default function PongGame() {
         setIsPaused(false)
         setWinner(null)
         playSound("start")
-    }
-
-    // Manejar controles desde el pad
-    const handleDirectionChange = (direction) => {
-        if (gameOver || isPaused) return
-
-        const canvas = canvasRef.current
-        if (!canvas) return
-
-        const height = canvas.height
-        const paddleHeight = 60
-        let newY = paddleYRef.current
-
-        if (direction === "up") {
-            newY -= 15
-        } else if (direction === "down") {
-            newY += 15
-        }
-
-        // Keep paddle within bounds
-        if (newY < 0) {
-            newY = 0
-        } else if (newY > height - paddleHeight) {
-            newY = height - paddleHeight
-        }
-
-        paddleYRef.current = newY
-    }
-
-    const handleButtonPress = (button) => {
-        if (gameOver) {
-            if (button === "a") {
-                resetGame()
-            }
-            return
-        }
-
-        if (button === "b") {
-            setIsPaused(!isPaused)
-        }
     }
 
     return (
@@ -345,10 +250,6 @@ export default function PongGame() {
 
             <canvas ref={canvasRef} width={400} height={300} className="border border-gray-700 bg-black" />
 
-            {/* Control Pad para dispositivos móviles */}
-            {isTouchDevice && <ControlPad onDirectionChange={handleDirectionChange} onButtonPress={handleButtonPress} />}
-
-            {/* Componente de puntuaciones altas */}
             <HighScore gameId="pong" />
 
             {gameOver && (
@@ -359,8 +260,8 @@ export default function PongGame() {
                         <button
                             onClick={resetGame}
                             className="bg-gradient-to-r from-blue-600 to-blue-800 hover:from-blue-500 hover:to-blue-700 
-                       text-white px-4 py-2 rounded-md shadow-lg border border-blue-700 
-                       transition-all duration-200 w-full"
+                            text-white px-4 py-2 rounded-md shadow-lg border border-blue-700 
+                            transition-all duration-200 w-full"
                         >
                             Jugar de nuevo
                         </button>
@@ -371,7 +272,6 @@ export default function PongGame() {
             <div className="mt-2 text-xs text-center">
                 <p>Mueve el ratón o desliza para controlar la paleta</p>
                 <p>Primero en llegar a 5 puntos gana</p>
-                {isTouchDevice && <p className="text-gray-400 text-[10px] mt-1">Usa el pad para mover arriba y abajo</p>}
             </div>
         </div>
     )
